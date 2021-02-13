@@ -1,7 +1,7 @@
 // Implementação do jogo 2048 em C para Computação 1 (CC)
 // Feito por :
 // Leonardo Santiago DRE 120036072
-// Miguel Uchoa      DRE 120036412
+// Miguel Uchoa      DRE
 // Caio Monteiro     DRE 120036373
 
 
@@ -62,8 +62,9 @@ int createRandomSquare(GAME_ENV * game_environment){
   /* Escolhe um quadrado vazio do tabuleiro e adiciona
      uma tile nele
    */
-  int qntdQuadradosVazios, randomSquareIndex, randomSquarePosition, index;
+  int qntdQuadradosVazios, randomSquareIndex, randomSquarePosition, index, newTile;
   int * temp_buffer;
+  float dois_ou_quatro;
   qntdQuadradosVazios = 0;
   temp_buffer = malloc(sizeof(int) * BOARD_WIDTH * BOARD_HEIGHT);
   for (index=0; index < BOARD_HEIGHT * BOARD_WIDTH; index ++){
@@ -76,8 +77,10 @@ int createRandomSquare(GAME_ENV * game_environment){
     return -1;
   }
   randomSquareIndex = (int) rand() / (RAND_MAX + 1.0) * qntdQuadradosVazios; // escolhemos um numero de [0, qntdquadradosvazios-1]
+  dois_ou_quatro = rand() / (RAND_MAX + 1.0);
+  newTile = dois_ou_quatro > 0.9 ? 2 : 4; // 90% de chance de ser 2 e 10% de ser 4 (probabilidades advindas da internet)
   randomSquarePosition = temp_buffer[randomSquareIndex]; // pegamos a posição que está nesse index
-  game_environment->gamePositions[randomSquarePosition] = 2; //criamos um novo tile nessa posição
+  game_environment->gamePositions[randomSquarePosition] = newTile; //criamos um novo tile nessa posição
   free(temp_buffer);
   return 0;
 }
