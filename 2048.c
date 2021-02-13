@@ -1,7 +1,7 @@
 // Implementação do jogo 2048 em C para Computação 1 (CC)
 // Feito por :
 // Leonardo Santiago DRE 120036072
-// Miguel Uchoa      DRE
+// Miguel Uchoa      DRE 120036412
 // Caio Monteiro     DRE 120036373
 
 
