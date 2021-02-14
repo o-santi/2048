@@ -23,8 +23,12 @@
    pra depois também poder mover pra esquerda
 */
 
-
+#ifdef _WIN32
+#include <ncurses/curses.h>
+#elif __unix__
 #include <ncurses.h>
+#endif
+
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
