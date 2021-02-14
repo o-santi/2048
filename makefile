@@ -4,6 +4,6 @@
 # nada muito serio
 
 build: 2048.c
-	gcc 2048.c -o 2048.exe -Wall -pedantic -lcurses
+	gcc 2048.c -o 2048 -Wall -pedantic -lcurses
 clean:
-	$(RM) 2048.exe
+	$(RM) 2048

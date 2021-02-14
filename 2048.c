@@ -5,13 +5,23 @@
    Caio Monteiro     DRE 120036373
 */
 
-#define SQUARE_WIDTH 11
-#define SQUARE_HEIGHT 11
+
+/* BOARD CONSTANTS*/
+#define SQUARE_WIDTH 7
+#define SQUARE_HEIGHT 5
 #define BOARD_WIDTH 4
 #define BOARD_HEIGHT 4
 
 
-#include <ncurses/curses.h>
+/* SYSTEM CONSTANTS*/
+#define RIGHT 1
+#define UP 2
+#define DOWN 3
+#define LEFT 4
+
+
+
+#include <ncurses.h>
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
@@ -44,7 +54,6 @@ void createBoard(GAME_ENV *game_environment) {
   for (coluna = 0; coluna < BOARD_HEIGHT; coluna++) {
     for (linha = 0; linha < BOARD_WIDTH; linha++) {
       window = newwin(SQUARE_HEIGHT, SQUARE_WIDTH, coluna * SQUARE_HEIGHT, linha * SQUARE_WIDTH); // cria uma window na posição (coluna, linha)
-      box(window, 0, 0);  //desenha a box default envolta da window
       game_environment->gameBoard[coluna*BOARD_HEIGHT + linha] = window; // Salva a window na estrutura do game env
     }
   }
@@ -56,12 +65,13 @@ void blitToScreen(GAME_ENV *game_environment) {
   for (index = 0; index < BOARD_HEIGHT * BOARD_WIDTH; index++) {
     wclear(game_environment->gameBoard[index]); /* erase the tile in window*/
     numberAtTile = game_environment->gamePositions[index]; /* number at the current tile*/
-    if (numberAtTile > 0) { /* only print to screen if it's not 0 */
-      itoa(numberAtTile, to_char_buffer, 10); /* print it to buffer*/
-      mvwaddstr(game_environment->gameBoard[index], SQUARE_WIDTH / 2, SQUARE_WIDTH / 2,to_char_buffer); /* print buffer to window */
-    }
+    //if (numberAtTile > 0) { /* only print to buffer if it's not 0 */
+    sprintf(to_char_buffer, "%d", numberAtTile); /* print it to buffer*/
+    mvwaddstr(game_environment->gameBoard[index], SQUARE_WIDTH / 2, SQUARE_WIDTH / 2,to_char_buffer); /* print buffer to window */
+    box(game_environment->gameBoard[index], 0, 0);  // desenha a box default envolta da window
+    wrefresh(game_environment->gameBoard[index]); // refresh box
+    //}
   }
-  refresh(); /* update screen */
   free(to_char_buffer);
 }
 
@@ -73,19 +83,19 @@ int processUserMove(int userMove) {
   case 'D':
   case 'd':
   case KEY_RIGHT:
-    return 1;
+    return RIGHT;
   case 'w':
   case 'W':
   case KEY_UP:
-    return 2;
+    return UP;
   case 's':
   case 'S':
   case KEY_DOWN:
-    return 3;
+    return DOWN;
   case 'a':
   case 'A':
   case KEY_LEFT:
-    return 4;
+    return LEFT;
   default:
     return -1;
 
@@ -117,7 +127,7 @@ int createRandomSquare(GAME_ENV * game_environment){
   }
   randomSquareIndex = (int) rand() / (RAND_MAX + 1.0) * qntdQuadradosVazios; // escolhemos um numero de [0, qntdquadradosvazios-1]
   dois_ou_quatro = rand() / (RAND_MAX + 1.0);
-  newTile = dois_ou_quatro > 0.9 ? 2 : 4; // 90% de chance de ser 2 e 10% de ser 4 (probabilidades advindas da internet)
+  newTile = dois_ou_quatro > 0.9 ? 4 : 2; // 90% de chance de ser 2 e 10% de ser 4 (probabilidades advindas da internet)
   randomSquarePosition = temp_buffer[randomSquareIndex]; // pegamos a posição que está nesse Tile
   game_environment->gamePositions[randomSquarePosition] = newTile; // criamos um novo tile nessa posição
   free(temp_buffer);
@@ -129,6 +139,7 @@ void startGameEnvironment(GAME_ENV * game_environment) {
   keypad(stdscr, TRUE); // pega o input do keypad
   cbreak(); // desativa line breaking
   noecho(); // desativa printing to screen
+  refresh();
   srand(time(NULL)); // inicializamos a seed para os numeros randomicos, baseado no tempo
   game_environment->gamePositions = malloc(sizeof(int) * BOARD_HEIGHT * BOARD_WIDTH);
   game_environment->gameBoard = malloc(sizeof(WINDOW) * BOARD_HEIGHT * BOARD_WIDTH); // inicializamos o array que segurará as windows
@@ -138,6 +149,7 @@ void startGameEnvironment(GAME_ENV * game_environment) {
   createBoard(game_environment); // cria todos as windows e salva no vetor gamePositions
   createRandomSquare(game_environment);
   createRandomSquare(game_environment); //chamamos 2 vezes para criar 2 quadrados iniciais aleatorios
+  blitToScreen(game_environment);
 }
 
 void runGameLoop(GAME_ENV * game_environment) {
@@ -152,7 +164,7 @@ void runGameLoop(GAME_ENV * game_environment) {
     // se for -1, o movimento nao é valido
     // TODO: piscar a tela de vermelho quando for invalido
     if (direction != 1) {
-      moveBoard(userMove);
+      /* moveBoard(userMove); */
       blitToScreen(game_environment);
     }
   } while (game_environment->gameStatus);
@@ -163,7 +175,7 @@ int main(void) {
   GAME_ENV* game_environment = malloc(sizeof(GAME_ENV));
   startGameEnvironment(game_environment);
   runGameLoop(game_environment); 
-  finishGame(game_environment);
+  //finishGame(game_environment);
   
   return 0;
 }
