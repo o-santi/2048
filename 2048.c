@@ -1,9 +1,9 @@
-// Implementação do jogo 2048 em C para Computação 1 (CC)
-// Feito por :
-// Leonardo Santiago DRE 120036072
-// Miguel Uchoa      DRE 120036412
-// Caio Monteiro     DRE 120036373
-
+/* Implementação do jogo 2048 em C para Computação 1 (CC)
+   Feito por :
+   Leonardo Santiago DRE 120036072
+   Miguel Uchoa      DRE 120036412
+   Caio Monteiro     DRE 120036373
+*/
 
 #define SQUARE_WIDTH 11
 #define SQUARE_HEIGHT 11
@@ -18,9 +18,10 @@
 #include <stdlib.h>
 
 
-// Estrutura que irá segurar todas as variaveis do jogo
-// Criamos um ponteiro para ela e
-// passamos o ponteiro pelas funcoes
+/* Estrutura que irá segurar todas as variaveis do jogo
+   Criamos um ponteiro para ela e
+   passamos o ponteiro pelas funcoes
+*/
 typedef struct{
   int actualScore;
   int highScore;
@@ -33,7 +34,7 @@ typedef struct{
 
 void finishGame(GAME_ENV * game_environment);
 
-void createBoardFromGamePosition(GAME_ENV *game_environment) {
+void createBoard(GAME_ENV *game_environment) {
   /* Cria uma WINDOW do ncurses para cada
      quadrado do board e armazena no vetor
      gameBoard
@@ -48,11 +49,50 @@ void createBoardFromGamePosition(GAME_ENV *game_environment) {
     }
   }
 }
-void updateBoard(GAME_ENV * game_environment);
 
-void blitToScreen(GAME_ENV * game_environment);
+void blitToScreen(GAME_ENV *game_environment) {
+  int index, numberAtTile;
+  char *to_char_buffer = malloc(sizeof * to_char_buffer * 10); /* colocamos 10 chars so pra ter certeza, apesar de nao conhecer ninguem que chegaria em 10 digitos no 2048*/
+  for (index = 0; index < BOARD_HEIGHT * BOARD_WIDTH; index++) {
+    wclear(game_environment->gameBoard[index]); /* erase the tile in window*/
+    numberAtTile = game_environment->gamePositions[index]; /* number at the current tile*/
+    if (numberAtTile > 0) { /* only print to screen if it's not 0 */
+      itoa(numberAtTile, to_char_buffer, 10); /* print it to buffer*/
+      mvwaddstr(game_environment->gameBoard[index], SQUARE_WIDTH / 2, SQUARE_WIDTH / 2,to_char_buffer); /* print buffer to window */
+    }
+  }
+  refresh(); /* update screen */
+  free(to_char_buffer);
+}
 
-int processUserMove(char userMove, GAME_ENV * game_environment);
+int processUserMove(int userMove) {
+  /* Processa o input do player e devolve a direcao escolhida baseada na letra
+     TODO: pensar em valores mais meaningful pra esses returns
+   */
+  switch (userMove) {
+  case 'D':
+  case 'd':
+  case KEY_RIGHT:
+    return 1;
+  case 'w':
+  case 'W':
+  case KEY_UP:
+    return 2;
+  case 's':
+  case 'S':
+  case KEY_DOWN:
+    return 3;
+  case 'a':
+  case 'A':
+  case KEY_LEFT:
+    return 4;
+  default:
+    return -1;
+
+  }
+}
+
+int moveBoard(char direction);
 
 int getArrayLength(int * array){
   return sizeof(*array) / sizeof(array[0]);
@@ -63,10 +103,9 @@ int createRandomSquare(GAME_ENV * game_environment){
      uma tile nele
    */
   int qntdQuadradosVazios, randomSquareIndex, randomSquarePosition, index, newTile;
-  int * temp_buffer;
+  int * temp_buffer = malloc(sizeof(int) * BOARD_WIDTH * BOARD_HEIGHT);
   float dois_ou_quatro;
   qntdQuadradosVazios = 0;
-  temp_buffer = malloc(sizeof(int) * BOARD_WIDTH * BOARD_HEIGHT);
   for (index=0; index < BOARD_HEIGHT * BOARD_WIDTH; index ++){
     if (game_environment->gamePositions[index] == 0){
       temp_buffer[qntdQuadradosVazios] = index;
@@ -79,13 +118,13 @@ int createRandomSquare(GAME_ENV * game_environment){
   randomSquareIndex = (int) rand() / (RAND_MAX + 1.0) * qntdQuadradosVazios; // escolhemos um numero de [0, qntdquadradosvazios-1]
   dois_ou_quatro = rand() / (RAND_MAX + 1.0);
   newTile = dois_ou_quatro > 0.9 ? 2 : 4; // 90% de chance de ser 2 e 10% de ser 4 (probabilidades advindas da internet)
-  randomSquarePosition = temp_buffer[randomSquareIndex]; // pegamos a posição que está nesse index
-  game_environment->gamePositions[randomSquarePosition] = newTile; //criamos um novo tile nessa posição
+  randomSquarePosition = temp_buffer[randomSquareIndex]; // pegamos a posição que está nesse Tile
+  game_environment->gamePositions[randomSquarePosition] = newTile; // criamos um novo tile nessa posição
   free(temp_buffer);
   return 0;
-}
+  }
 
-void startGameEnvironment(GAME_ENV* game_environment) {
+void startGameEnvironment(GAME_ENV * game_environment) {
   initscr(); // inicia a curses screen
   keypad(stdscr, TRUE); // pega o input do keypad
   cbreak(); // desativa line breaking
@@ -96,27 +135,24 @@ void startGameEnvironment(GAME_ENV* game_environment) {
   game_environment->gameStatus = 1; // gamestatus será valido
   game_environment->actualScore = 0; // score inicia com 0
   game_environment->rounds = 0;
-  createBoardFromGamePosition(game_environment); // cria todos as windows e salva no vetor gamePositions
+  createBoard(game_environment); // cria todos as windows e salva no vetor gamePositions
   createRandomSquare(game_environment);
   createRandomSquare(game_environment); //chamamos 2 vezes para criar 2 quadrados iniciais aleatorios
-  
-  
 }
 
 void runGameLoop(GAME_ENV * game_environment) {
   // Inicia o game loop e mantem enquanto
   // o jogo nao acabou
-  int is_valid;
+  int direction;
   int userMove;
-  //gameStatus representa o estado atual do jogo
-  //quando = 1 -> significa que o jogo deve continuar
-  //quando = 0 -> significia que o jogador perdeu
-  //quando != 1 && !=0 -> significa que houve algum erro
   do {
     userMove = getch();
-    is_valid = processUserMove(userMove, game_environment);
-    if (is_valid==1) {
-      updateBoard(game_environment);
+    direction= processUserMove(userMove);
+    // retorna a direcao escolhida,
+    // se for -1, o movimento nao é valido
+    // TODO: piscar a tela de vermelho quando for invalido
+    if (direction != 1) {
+      moveBoard(userMove);
       blitToScreen(game_environment);
     }
   } while (game_environment->gameStatus);
@@ -124,9 +160,9 @@ void runGameLoop(GAME_ENV * game_environment) {
 
 
 int main(void) {
-  GAME_ENV * game_environment;
+  GAME_ENV* game_environment = malloc(sizeof(GAME_ENV));
   startGameEnvironment(game_environment);
-  runGameLoop(game_environment);
+  runGameLoop(game_environment); 
   finishGame(game_environment);
   
   return 0;
