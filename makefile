@@ -8,4 +8,4 @@ unix: 2048.c
 win: 2048.c
 	gcc 2048.c -o 2048.exe -Wall -pedantic -lncurses
 clean:
-	$(RM) 2048
+	$(RM) 2048 2048.exe

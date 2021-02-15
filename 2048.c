@@ -24,10 +24,13 @@
 */
 
 #ifdef _WIN32
-#include <ncurses/curses.h>
+#include <ncurses/ncurses.h>
 #elif __unix__
 #include <ncurses.h>
 #endif
+
+/* como eu (@o-santi) uso msys e wsl, preciso inserir esse ifdef
+   pra compilar no windows (ja que ncurses tem no msys) */
 
 #include <string.h>
 #include <stdio.h>
@@ -53,6 +56,20 @@ int getArrayLength(int * array){
   return sizeof(*array) / sizeof(array[0]);
 }
 
+
+int getColorPair(int number) {
+  /* Acha a potencia de 2 do numero, que sera o color-id dele
+     como todos os numeros são multiplos de 2, só precisamos dividir até achar 1
+   */
+  int potencia;
+  potencia = 0;
+  while (number > 1) {
+    number /= 2;
+    potencia++;
+  }
+  return potencia;
+}
+
 void finishGame(GAME_ENV * game_environment);
 
 void createBoard(GAME_ENV *game_environment) {
@@ -70,21 +87,31 @@ void createBoard(GAME_ENV *game_environment) {
   }
 }
 
+
 void blitToScreen(GAME_ENV *game_environment) {
-  int index, numberAtTile;
-  char *to_char_buffer = malloc(sizeof * to_char_buffer * 10); /* colocamos 10 chars so pra ter certeza, apesar de nao conhecer ninguem que chegaria em 10 digitos no 2048*/
+  int index, numberAtTile, charLength, colorPairIndex;
+  char *to_char_buffer = malloc(sizeof * to_char_buffer * 50); /* colocamos 50 chars so pra ter certeza, apesar de nao conhecer ninguem que chegaria em 10 digitos no 2048*/
+  charLength = 0;
   for (index = 0; index < BOARD_HEIGHT * BOARD_WIDTH; index++) {
     wclear(game_environment->gameBoard[index]); /* erase the tile in window*/
+    wbkgd(game_environment->gameBoard[index], 0); // reset the background color
     numberAtTile = game_environment->gamePositions[index]; /* number at the current tile*/
-    //if (numberAtTile > 0) { /* only print to buffer if it's not 0 */
-    sprintf(to_char_buffer, "%d", numberAtTile); /* print it to buffer*/
-    mvwaddstr(game_environment->gameBoard[index], SQUARE_WIDTH / 2, SQUARE_WIDTH / 2,to_char_buffer); /* print buffer to window */
-    box(game_environment->gameBoard[index], 0, 0);  // desenha a box default envolta da window
+    if (numberAtTile > 0) { /* only print to buffer if it's not 0 */
+      sprintf(to_char_buffer, "%d", numberAtTile); /* print it to buffer*/
+      box(game_environment->gameBoard[index], 0, 0);  // desenha a box default envolta da window
+      colorPairIndex = getColorPair(numberAtTile); 
+      wbkgd(game_environment->gameBoard[index], COLOR_PAIR(colorPairIndex));
+      charLength = (int) strlen(to_char_buffer) / 2;
+    }
+    else {
+      sprintf(to_char_buffer, "%c", ' '); /* printa espaco vazio para o buffer */
+    }
+    mvwaddstr(game_environment->gameBoard[index], SQUARE_HEIGHT/ 2, SQUARE_WIDTH / 2 - charLength ,to_char_buffer); /* print buffer to window */
     wrefresh(game_environment->gameBoard[index]); // refresh box
-    //}
   }
   free(to_char_buffer);
 }
+
 
 int processUserMove(int userMove) {
   /* Processa o input do player e devolve a direcao escolhida baseada na letra
@@ -153,8 +180,8 @@ void moverTabuleiroParaEsquerda(int **matrix) {
      TODO: ajeitar essa bagunça
    */
   int i, j, anterior, coluna, linha, quadrado;
+  int *nova_linha = malloc(sizeof(int) * BOARD_WIDTH);
   for (coluna = 0; coluna < BOARD_HEIGHT; coluna++) {
-    int *nova_linha = malloc(sizeof(int) * BOARD_WIDTH);
     memset(nova_linha, 0, sizeof(int) * BOARD_WIDTH);
     anterior = 0;
     j = 0;
@@ -184,8 +211,8 @@ void moverTabuleiroParaEsquerda(int **matrix) {
     for (i = 0; i < BOARD_WIDTH; i++) {
       (*matrix)[coluna*BOARD_HEIGHT + i] = nova_linha[i];
     }
-    free(nova_linha);
   }
+  free(nova_linha);
 }
 
 void executarMovimento(int direcao, GAME_ENV *game_environment) {
@@ -200,7 +227,7 @@ void executarMovimento(int direcao, GAME_ENV *game_environment) {
     rotacionarMatrix90Graus(&game_environment->gamePositions);
   }
   moverTabuleiroParaEsquerda(&game_environment->gamePositions);
-  for (index = 0; index < 4- direcao; index++) {
+  for (index = 0; index < 4 - direcao; index++) {
     rotacionarMatrix90Graus(&game_environment->gamePositions);
   }
 }
@@ -225,32 +252,64 @@ int createRandomSquare(GAME_ENV * game_environment){
   }
   randomSquareIndex = (int) rand() / (RAND_MAX + 1.0) * qntdQuadradosVazios; // escolhemos um numero de [0, qntdquadradosvazios-1]
   dois_ou_quatro = rand() / (RAND_MAX + 1.0);
-  newTile = dois_ou_quatro > 0.9 ? 4 :
-    2; // 90% de chance de ser 2 e 10% de ser 4 (probabilidades advindas da
-       // internet)
-    randomSquarePosition =
-        temp_buffer[randomSquareIndex]; // pegamos a posição que está nesse Tile
-    game_environment->gamePositions[randomSquarePosition] =
-        newTile; // criamos um novo tile nessa posição
-    free(temp_buffer);
-    return 0;
+  newTile = dois_ou_quatro > 0.9 ? 4 : 2; // 90% de chance de ser 2 e 10% de ser 4 (probabilidades advindas da internet)
+  randomSquarePosition = temp_buffer[randomSquareIndex]; // pegamos a posição que está nesse Tile
+  game_environment->gamePositions[randomSquarePosition] = newTile; // criamos um novo tile nessa posição
+  free(temp_buffer);
+  return 0;
   }
 
-void startGameEnvironment(GAME_ENV * game_environment) {
+
+void initCores(void) {
+  /* Inicializa as cores usadas para o background de cada numero
+     as 15 primeiras são para colorir até 2^15, enquanto a 16 segura
+     a cor default do texto
+   */
+  int index;
+  init_color(1, 100, 10, 100);
+  init_color(2, 200, 20, 0);
+  init_color(3, 70, 240, 90);
+  init_color(4, 89, 250, 36);
+  init_color(5, 0, 0, 0);
+  init_color(6, 0, 0, 0);
+  init_color(7, 0, 0, 0);
+  init_color(8, 0, 0, 0);
+  init_color(9, 0, 0, 0);
+  init_color(10, 0, 0, 0);
+  init_color(11, 0, 0, 0);
+  init_color(12, 0, 0, 0);
+  init_color(13, 0, 0, 0);
+  init_color(14, 0, 0, 0);
+  init_color(15, 0, 0, 0);
+  init_color(16, 0, 0, 0); // gray-ish para o texto
+
+  for (index = 1; index < 16; index++) {
+    init_pair(index, 16, index);
+    // cria um color-pair com a cor do texto default e a cor especifica para o
+    // background no index
+  }
+}
+
+void startGameEnvironment(GAME_ENV *game_environment) {
   initscr(); // inicia a curses screen
+  if (has_colors() == TRUE) {
+    start_color(); // use colors
+    initCores(); // init color pairs
+    use_default_colors();
+  } 
   keypad(stdscr, TRUE); // pega o input do keypad
   cbreak(); // desativa line breaking
   noecho(); // desativa printing to screen
-  refresh();
+  curs_set(0); // set cursor to be invisible
+  refresh(); // refresh screen
   srand(time(NULL)); // inicializamos a seed para os numeros randomicos, baseado no tempo
   game_environment->gamePositions = malloc(sizeof(int) * BOARD_HEIGHT * BOARD_WIDTH);
   game_environment->gameBoard = malloc(sizeof(WINDOW) * BOARD_HEIGHT * BOARD_WIDTH); // inicializamos o array que segurará as windows
+  memset(game_environment->gamePositions, 0, sizeof(int) * BOARD_HEIGHT * BOARD_WIDTH);
   game_environment->gameStatus = 1; // gamestatus será valido
   game_environment->actualScore = 0; // score inicia com 0
   game_environment->rounds = 0;
   createBoard(game_environment); // cria todos as windows e salva no vetor gamePositions
-  createRandomSquare(game_environment);
-  createRandomSquare(game_environment);
   createRandomSquare(game_environment);
   createRandomSquare(game_environment); //chamamos 2 vezes para criar 2 quadrados iniciais aleatorios
   blitToScreen(game_environment);
