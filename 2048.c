@@ -26,10 +26,9 @@
    esses valores se referem a quantidade de rotacoes necessarias
    pra depois também poder mover pra esquerda
 */
-
 #ifdef _WIN32
 #include <ncurses/ncurses.h>
-#elif __unix__
+#elif defined(unix) || defined(__unix__) || defined(__unix)
 #include <ncurses.h>
 #endif
 
@@ -60,12 +59,11 @@ int getArrayLength(int * array){
   return sizeof(*array) / sizeof(array[0]);
 }
 
-
 int getColorPair(int number) {
   /* Acha a potencia de 2 do numero, que sera o color-id dele
      como todos os numeros são multiplos de 2, só precisamos dividir até achar 1
    */
-  if (number == 0) { return TILE_VAZIA_COLOR;}
+  if (number == 0) {return TILE_VAZIA_COLOR;}
   int potencia;
   potencia = 0;
   while (number > 1) {
@@ -79,6 +77,8 @@ void finishGame(GAME_ENV *game_environment) {
   nocbreak();
   keypad(stdscr, FALSE);
   echo();
+  curs_set(1);
+  standend();
   endwin();
 }
 
@@ -186,7 +186,7 @@ void rotacionarMatrix90Graus(int **matrix) {
   inverterMatrix(matrix);
 }
 
-void moverTabuleiroParaEsquerda(int **matrix) {
+void moverTabuleiroParaEsquerda(GAME_ENV *game_env) {
   /* move todas as tiles para a esquerda 
      ideia para a função foi tirada de:
      https://flothesof.github.io/2048-game.html
@@ -200,7 +200,7 @@ void moverTabuleiroParaEsquerda(int **matrix) {
     anterior = 0;
     j = 0;
     for (linha = 0; linha < BOARD_WIDTH; linha++) {
-      quadrado = (*matrix)[coluna*BOARD_HEIGHT + linha]; // salva o valor de matrix[coluna][linha]
+      quadrado = game_env->gamePositions[coluna*BOARD_HEIGHT + linha]; // salva o valor de matrix[coluna][linha]
       if (quadrado > 0) {
         if (anterior == 0) {
 	  anterior = quadrado;
@@ -208,7 +208,11 @@ void moverTabuleiroParaEsquerda(int **matrix) {
 	else {
           if (anterior == quadrado) {
 	    nova_linha[j] = 2 * quadrado; /* adiciona na nova linha 2x o  quadrado */
-	    j++;
+	    game_env->actualScore += 2*quadrado;
+            if (game_env->actualScore > game_env->highScore) {
+	      game_env->highScore = game_env->actualScore;
+            }
+            j++;
 	    anterior = 0;
           }
 	  else {
@@ -223,7 +227,7 @@ void moverTabuleiroParaEsquerda(int **matrix) {
       nova_linha[j] = anterior;
     }
     for (i = 0; i < BOARD_WIDTH; i++) {
-      (*matrix)[coluna*BOARD_HEIGHT + i] = nova_linha[i];
+      game_env->gamePositions[coluna*BOARD_HEIGHT + i] = nova_linha[i];
     }
   }
   free(nova_linha);
@@ -240,7 +244,7 @@ void executarMovimento(int direcao, GAME_ENV *game_environment) {
   for (index = 0; index < direcao; index++) {
     rotacionarMatrix90Graus(&game_environment->gamePositions);
   }
-  moverTabuleiroParaEsquerda(&game_environment->gamePositions);
+  moverTabuleiroParaEsquerda(game_environment);
   for (index = 0; index < 4 - direcao; index++) {
     rotacionarMatrix90Graus(&game_environment->gamePositions);
   }
@@ -271,49 +275,21 @@ int createRandomSquare(GAME_ENV * game_environment){
   game_environment->gamePositions[randomSquarePosition] = newTile; // criamos um novo tile nessa posição
   free(temp_buffer);
   return 0;
-  }
+}
 
-
-void initCores(void) {
-  /* Inicializa as cores usadas para o background de cada numero
-     as 15 primeiras são para colorir até 2^15, enquanto a 16 segura
-     a cor default do texto
-     
-     rgb mas de 0-1000 ao inves de 0-256 
-   */
-  int index;
-  init_color(1, 600, 10, 600);
-  init_color(2, 700, 20, 0);
-  init_color(3, 70, 240, 90);
-  init_color(4, 89, 750, 36);
-  init_color(5, 0, 0, 0);
-  init_color(6, 0, 0, 0);
-  init_color(7, 0, 0, 0);
-  init_color(8, 0, 0, 0);
-  init_color(9, 0, 0, 0);
-  init_color(10, 0, 0, 0);
-  init_color(11, 0, 0, 0);
-  init_color(12, 0, 0, 0);
-  init_color(13, 0, 0, 0);
-  init_color(14, 0, 0, 0);
-  init_color(15, 0, 0, 0);
-  init_color(16, 20, 20, 20); // gray-ish para o texto
-  init_color(20, 600, 600, 600); // cinza claro
-  for (index = 1; index < 16; index++) {
-    init_pair(index, 16, index);
-    // cria um color-pair com a cor do texto default e a cor especifica para o
-    // background no index
-  }
-  init_pair(BACKGROUND_COLOR, 16, 20);
-  init_pair(TILE_VAZIA_COLOR, 16, 20);
+void initColorPairs(void) {
+  init_pair(1, 16, 14);
+  init_pair(2, 9, 52);
+  init_pair(BACKGROUND_COLOR, 0, 7);
+  init_pair(TILE_VAZIA_COLOR, 0, 7);
 }
 
 void startGameEnvironment(GAME_ENV *game_environment) {
   initscr(); // inicia a curses screen
   if (has_colors() == TRUE) {
     start_color(); // use colors
-    initCores(); // init color pairs
     use_default_colors();
+    initColorPairs();
   } 
   keypad(stdscr, TRUE); // pega o input do keypad
   cbreak(); // desativa line breaking
