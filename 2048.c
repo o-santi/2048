@@ -14,6 +14,7 @@
 
 #define BACKGROUND_COLOR 100
 #define TILE_VAZIA_COLOR 101
+#define DERROTA_COLOR 102
 
 
 /* SYSTEM CONSTANTS*/
@@ -73,13 +74,26 @@ int getColorPair(int number) {
   return potencia;
 }
 
-void finishGame(GAME_ENV *game_environment) {
+void terminarPrograma(GAME_ENV *game_environment) {
   nocbreak();
   keypad(stdscr, FALSE);
   echo();
   curs_set(1);
   standend();
   endwin();
+}
+
+void showDerrotaScreen(GAME_ENV *game_environment) {
+  int index;
+  WINDOW * board_window;
+  for (index = 0; index < BOARD_WIDTH * BOARD_HEIGHT; index++) {
+    board_window = game_environment->gameBoard[index];
+    werase(board_window);
+    wbkgd(board_window, 0);
+    wbkgd(board_window, COLOR_PAIR(DERROTA_COLOR));
+    wrefresh(board_window);
+  }
+  getch();
 }
 
 void createBoard(GAME_ENV *game_environment) {
@@ -96,6 +110,7 @@ void createBoard(GAME_ENV *game_environment) {
     }
   }
   game_environment->gameBoard[BOARD_HEIGHT*BOARD_WIDTH] = newwin(SQUARE_HEIGHT * BOARD_HEIGHT, SQUARE_WIDTH * 3, 0, BOARD_WIDTH * SQUARE_WIDTH);
+  //criamos a tela a direita de UI
 }
 
 
@@ -104,7 +119,7 @@ void drawBoard(GAME_ENV *game_environment) {
   char *to_char_buffer = malloc(sizeof * to_char_buffer * 50); /* colocamos 50 chars so pra ter certeza, apesar de nao conhecer ninguem que chegaria em 10 digitos no 2048*/
   charLength = 0;
   for (index = 0; index < BOARD_HEIGHT * BOARD_WIDTH; index++) {
-    wclear(game_environment->gameBoard[index]); /* erase the tile in window*/
+    werase(game_environment->gameBoard[index]); /* erase the tile in window*/
     wbkgd(game_environment->gameBoard[index], 0); // reset the background color
     numberAtTile = game_environment->gamePositions[index]; /* number at the current tile*/
     if (numberAtTile > 0) { /* only print to buffer if it's not 0 */
@@ -145,7 +160,7 @@ void drawUiScreen(GAME_ENV *game_environment) {
   wattron(ui_window, COLOR_PAIR(BACKGROUND_COLOR));
   box(ui_window, 0, 0);
   wattroff(ui_window, COLOR_PAIR(BACKGROUND_COLOR));
-  mvwaddstr(ui_window, 1, 1, "2048 em C");
+  mvwaddstr(ui_window, 1, SQUARE_WIDTH * 3/2 - 4, "2048 em C");
   
   strcpy(score_string, "Score: ");
   strcpy(high_score_string, "High Score: ");
@@ -240,7 +255,7 @@ void rotacionarMatrix90Graus(int **matrix) {
   inverterMatrix(matrix);
 }
 
-void moverTabuleiroParaEsquerda(GAME_ENV *game_env) {
+void moverTabuleiroParaEsquerda(int ** matrix, GAME_ENV *game_env) {
   /* move todas as tiles para a esquerda 
      ideia para a função foi tirada de:
      https://flothesof.github.io/2048-game.html
@@ -254,7 +269,7 @@ void moverTabuleiroParaEsquerda(GAME_ENV *game_env) {
     anterior = 0;
     j = 0;
     for (linha = 0; linha < BOARD_WIDTH; linha++) {
-      quadrado = game_env->gamePositions[coluna*BOARD_HEIGHT + linha]; // salva o valor de matrix[coluna][linha]
+      quadrado = (*matrix)[coluna*BOARD_HEIGHT + linha]; // salva o valor de matrix[coluna][linha]
       if (quadrado > 0) {
         if (anterior == 0) {
 	  anterior = quadrado;
@@ -262,9 +277,11 @@ void moverTabuleiroParaEsquerda(GAME_ENV *game_env) {
 	else {
           if (anterior == quadrado) {
 	    nova_linha[j] = 2 * quadrado; /* adiciona na nova linha 2x o  quadrado */
-	    game_env->actualScore += 2*quadrado;
-            if (game_env->actualScore > game_env->highScore) {
-	      game_env->highScore = game_env->actualScore;
+            if (matrix == &game_env->gamePositions) {
+              game_env->actualScore += 2 * quadrado;
+              if (game_env->actualScore > game_env->highScore) {
+                game_env->highScore = game_env->actualScore;
+              }
             }
             j++;
 	    anterior = 0;
@@ -281,13 +298,13 @@ void moverTabuleiroParaEsquerda(GAME_ENV *game_env) {
       nova_linha[j] = anterior;
     }
     for (i = 0; i < BOARD_WIDTH; i++) {
-      game_env->gamePositions[coluna*BOARD_HEIGHT + i] = nova_linha[i];
+      (*matrix)[coluna*BOARD_HEIGHT + i] = nova_linha[i];
     }
   }
   free(nova_linha);
 }
 
-void executarMovimento(int direcao, GAME_ENV *game_environment) {
+void executarMovimento(int **matrix, int direcao, GAME_ENV *game_environment) {
   /* rotaciona o tabuleiro pra direção correta, depois
      movimenta o tabuleiro pra esquerda e depois rotaciona
      pra direcao correta novamente
@@ -296,13 +313,16 @@ void executarMovimento(int direcao, GAME_ENV *game_environment) {
    */
   int index;
   for (index = 0; index < direcao; index++) {
-    rotacionarMatrix90Graus(&game_environment->gamePositions);
+    rotacionarMatrix90Graus(matrix);
   }
-  moverTabuleiroParaEsquerda(game_environment);
+  
+  moverTabuleiroParaEsquerda(matrix, game_environment);
   for (index = 0; index < 4 - direcao; index++) {
-    rotacionarMatrix90Graus(&game_environment->gamePositions);
+    rotacionarMatrix90Graus(matrix);
   }
-  game_environment->rounds++;
+  if (matrix == &game_environment->gamePositions) {
+    game_environment->rounds++;
+  }
 }
 
 
@@ -346,6 +366,7 @@ void initColorPairs(void) { /* a paleta de cores para o jogo */
   init_pair(11, 15, 220); /* cores do 2048 */
   init_pair(BACKGROUND_COLOR, 0, 102); 
   init_pair(TILE_VAZIA_COLOR, 0, 102);
+  init_pair(DERROTA_COLOR, 15, COLOR_RED);
 }
 
 void startGameEnvironment(GAME_ENV *game_environment) {
@@ -372,26 +393,60 @@ void startGameEnvironment(GAME_ENV *game_environment) {
   blitToScreen(game_environment);
 }
 
+int testIfMoveChangedBoard(GAME_ENV *game_environment, int direcao) {
+  /* executa o movimento num tabuleiro temporario e testa pra ver se
+     o movimento muda alguma pecao de lugar */
+  int index;
+  int *temporary_board = calloc(sizeof(int) * BOARD_WIDTH * BOARD_HEIGHT, sizeof(int));
+  memcpy(temporary_board, game_environment->gamePositions, sizeof(int) * BOARD_WIDTH * BOARD_HEIGHT);
+  executarMovimento(&temporary_board, direcao, game_environment);
+  for (index = 0; index < BOARD_WIDTH * BOARD_HEIGHT; index++) {
+    if (game_environment->gamePositions[index] != temporary_board[index]) {
+      free(temporary_board);
+      return 1; /* o movimento mudou pelo menos uma peca */
+    }
+  }
+  free(temporary_board);
+  return 0; /* o movimento nao mudou o tabuleiro */
+}
+
+int testIfGameIsLost(GAME_ENV *game_environment) {
+  int direcao, changed;
+  for (direcao = 0; direcao < 4; direcao++) {
+    /* testamos as quatro possiveis direcoes pra jogar */
+    changed = testIfMoveChangedBoard(game_environment, direcao);
+    if (changed == 1) {
+      return 1; /* o jogo deve continuar */
+    }
+  }
+  return -1; /* o jogo acabou */
+}
+
+
 void runGameLoop(GAME_ENV * game_environment) {
   // Inicia o game loop e mantem enquanto
   // o jogo nao acabou
-  int direction;
-  int userMove;
+  int direcao, userMove, movimentoMudouTabuleiro;
   do {
     userMove = getch();
-    direction= processUserMove(userMove);
+    direcao= processUserMove(userMove);
     // retorna a direcao escolhida,
     // se for -1, o movimento nao é valido
     // TODO: piscar a tela de vermelho quando for invalido
-    if (direction == EXIT) {
+    if (direcao == EXIT) {
       break;
     }
-    if (direction != -1) {
-      executarMovimento(direction, game_environment);
-      createRandomSquare(game_environment);
-      blitToScreen(game_environment);
+    if (direcao != -1) {
+      movimentoMudouTabuleiro = testIfMoveChangedBoard(game_environment, direcao);
+      if (movimentoMudouTabuleiro == 1) {
+	executarMovimento(&game_environment->gamePositions, direcao, game_environment);
+	createRandomSquare(game_environment);
+	blitToScreen(game_environment);
+      }
+      game_environment->gameStatus = testIfGameIsLost(game_environment);
     }
-  } while (game_environment->gameStatus);
+  } while (game_environment->gameStatus == 1);
+  showDerrotaScreen(game_environment);
 }
 
 
@@ -399,7 +454,7 @@ int main(void) {
   GAME_ENV* game_environment = malloc(sizeof(GAME_ENV));
   startGameEnvironment(game_environment);
   runGameLoop(game_environment); 
-  finishGame(game_environment);
+  terminarPrograma(game_environment);
   
   return 0;
 }
