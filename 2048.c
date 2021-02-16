@@ -88,12 +88,11 @@ void showDerrotaScreen(GAME_ENV *game_environment) {
   WINDOW * board_window;
   for (index = 0; index < BOARD_WIDTH * BOARD_HEIGHT; index++) {
     board_window = game_environment->gameBoard[index];
-    werase(board_window);
-    wbkgd(board_window, 0);
-    wbkgd(board_window, COLOR_PAIR(DERROTA_COLOR));
+    wattron(board_window, COLOR_PAIR(DERROTA_COLOR));
+    box(board_window, 0, 0);
+    wattron(board_window, COLOR_PAIR(DERROTA_COLOR));
     wrefresh(board_window);
   }
-  getch();
 }
 
 void createBoard(GAME_ENV *game_environment) {
@@ -366,7 +365,7 @@ void initColorPairs(void) { /* a paleta de cores para o jogo */
   init_pair(11, 15, 220); /* cores do 2048 */
   init_pair(BACKGROUND_COLOR, 0, 102); 
   init_pair(TILE_VAZIA_COLOR, 0, 102);
-  init_pair(DERROTA_COLOR, 15, COLOR_RED);
+  init_pair(DERROTA_COLOR, 0, COLOR_RED);
 }
 
 void startGameEnvironment(GAME_ENV *game_environment) {
@@ -422,6 +421,31 @@ int testIfGameIsLost(GAME_ENV *game_environment) {
   return -1; /* o jogo acabou */
 }
 
+void runGameLoop(GAME_ENV *game_environment);
+
+void manageDerrota(GAME_ENV *game_environment) {
+  int userChoice;
+  showDerrotaScreen(game_environment);
+  while(1) {
+    userChoice = getch();
+    if ((userChoice == 'r') || (userChoice == 'R') ||  (userChoice == 'q') || (userChoice == 'Q')){
+      break;
+    }
+  }
+  switch (userChoice) {
+  case 'Q':
+  case 'q': /* o usuario escolheu sair do jogo */
+    terminarPrograma(game_environment);
+    break;
+  case 'R':
+  case 'r': /* o usuario escolheu jogar novamente */
+    free(game_environment->gamePositions);
+    free(game_environment->gameBoard);
+    startGameEnvironment(game_environment);
+    runGameLoop(game_environment);
+    break;
+  }
+}
 
 void runGameLoop(GAME_ENV * game_environment) {
   // Inicia o game loop e mantem enquanto
@@ -446,7 +470,7 @@ void runGameLoop(GAME_ENV * game_environment) {
       game_environment->gameStatus = testIfGameIsLost(game_environment);
     }
   } while (game_environment->gameStatus == 1);
-  showDerrotaScreen(game_environment);
+  manageDerrota(game_environment);
 }
 
 
@@ -454,7 +478,5 @@ int main(void) {
   GAME_ENV* game_environment = malloc(sizeof(GAME_ENV));
   startGameEnvironment(game_environment);
   runGameLoop(game_environment); 
-  terminarPrograma(game_environment);
-  
   return 0;
 }
