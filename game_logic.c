@@ -46,6 +46,8 @@
 #include "game_env.h"
 #endif
 
+#include "game_logic.h"
+
 /* Estrutura que irá segurar todas as variaveis do jogo
    Criamos um ponteiro para ela e
    passamos o ponteiro pelas funcoes
@@ -56,6 +58,7 @@ int getArrayLength(int * array){
 }
 
 void terminarPrograma(GAME_ENV *game_environment) {
+  registrarHighScore(game_environment);
   nocbreak();
   keypad(stdscr, FALSE);
   echo();
@@ -212,6 +215,38 @@ void executarMovimento(int **matrix, int direcao, GAME_ENV *game_environment) {
   }
 }
 
+void registrarHighScore(GAME_ENV *game_environment){
+  FILE *fhs; /* Arquivo que guarda o high score. */
+  char stringHighScore[11]; /* O ultimo high score em string. O tamanho maximo de uma int eh 10. */
+  int ultimoHighScore;
+  fhs = fopen("high_score.txt", "r");
+  /* if (fhs == NULL){
+    fhs = fopen("high_score.txt", "w");
+    fprintf(fhs, "%d", game_environment->highScore);
+  }else { */
+    fscanf(fhs, "%s", stringHighScore);
+    ultimoHighScore = atoi(stringHighScore); /* Converte o high score de string para int. */
+    if (game_environment->highScore > ultimoHighScore){
+      freopen("high_score.txt", "w", fhs); /* Reabre o arquivo, deletando seu conteudo. */
+      fprintf(fhs, "%d", game_environment->highScore);
+    }
+  fclose(fhs);
+}
+
+void pegaHighScore(GAME_ENV *game_environment){
+  FILE *fhs;
+  char stringHighScore[11];
+  fhs = fopen("high_score.txt", "r");
+  if (fhs == NULL){
+    fhs = fopen("high_score.txt", "w");
+    fprintf(fhs, "0");
+  }else {
+    fscanf(fhs, "%s", stringHighScore);
+    game_environment->highScore = atoi(stringHighScore);
+  }
+  fclose(fhs);
+}
+
 
 int createRandomSquare(GAME_ENV * game_environment){
   /* Escolhe um quadrado vazio do tabuleiro e adiciona
@@ -282,13 +317,14 @@ void startGameEnvironment(GAME_ENV *game_environment) {
   */
   game_environment->actualScore = 0; // score inicia com 0
   game_environment->rounds = 0;
+  pegaHighScore(game_environment);
   createBoard(game_environment); // cria todos as windows e salva no vetor gamePositions
   createRandomSquare(game_environment);
   createRandomSquare(game_environment); //chamamos 2 vezes para criar 2 quadrados iniciais aleatorios
   blitToScreen(game_environment);
 }
 
-void runGameLoop(GAME_ENV *game_environment);
+
 
 void manageFimDeJogo(GAME_ENV *game_environment) {
   int userChoice;
@@ -306,6 +342,7 @@ void manageFimDeJogo(GAME_ENV *game_environment) {
     break;
   case 'R':
   case 'r': /* o usuario escolheu jogar novamente */
+    registrarHighScore(game_environment);
     free(game_environment->gamePositions);
     free(game_environment->gameBoard);
     startGameEnvironment(game_environment);

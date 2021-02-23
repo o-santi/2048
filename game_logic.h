@@ -32,6 +32,10 @@ void moverTabuleiroParaEsquerda(int ** matrix, GAME_ENV *game_environment);
   
 void executarMovimento(int **matrix, int direcao, GAME_ENV *game_environment);
 
+void registrarHighScore(GAME_ENV * game_environment);
+
+void pegaHighScore(GAME_ENV * game_environment);
+
 int createRandomSquare(GAME_ENV * game_environment);
 
 void startGameEnvironment(GAME_ENV *game_environment);
