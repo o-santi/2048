@@ -1,6 +1,9 @@
-#ifndef __GAME_ENV_H__
+#ifndef GAME_ENV_H
 #include "game_env.h"
 #endif
+
+#ifndef GAME_VISUALS_H
+#define GAME_VISUALS_h
 
 int getColorPair(int number);
 
@@ -13,3 +16,4 @@ void showEndGameScreen(GAME_ENV *game_environment);
 void blitToScreen(GAME_ENV *game_environment);
 
 void initColorPairs(void);
+#endif

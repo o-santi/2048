@@ -1,10 +1,9 @@
-#ifndef __GAME_ENV_H__
-#define __GAME_ENV_H__
-#endif
-
 #ifndef __NCURSES_H
 #include <ncurses.h>
 #endif
+
+#ifndef GAME_ENV_H
+#define GAME_ENV_H
 
 struct _GAME_ENV{
   int actualScore;
@@ -18,3 +17,4 @@ struct _GAME_ENV{
 };
 
 typedef struct _GAME_ENV GAME_ENV;
+#endif

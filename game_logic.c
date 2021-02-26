@@ -34,6 +34,7 @@
 #ifndef __STRING_H
 #include <string.h>
 #endif
+
 #ifndef __STDLIB_H__
 #include <stdlib.h>
 #endif
@@ -42,11 +43,17 @@
 #include <time.h>
 #include "game_visuals.h"
 
-#ifndef __GAME_ENV_H__
+#ifndef GAME_ENV_H
 #include "game_env.h"
 #endif
 
+#ifndef GAME_LOGIC_H
 #include "game_logic.h"
+#endif
+
+#ifndef GAME_VISUALS_H
+#include "game_visuals.h"
+#endif
 
 /* Estrutura que irá segurar todas as variaveis do jogo
    Criamos um ponteiro para ela e
@@ -75,12 +82,18 @@ void createBoard(GAME_ENV *game_environment) {
   WINDOW * window; 
   for (coluna = 0; coluna < game_environment->height; coluna++) {
     for (linha = 0; linha < game_environment->width; linha++) {
-      window = newwin(SQUARE_HEIGHT, SQUARE_WIDTH, coluna * SQUARE_HEIGHT, linha * SQUARE_WIDTH); // cria uma window na posição (coluna, linha)
-      game_environment->gameBoard[coluna*game_environment->height + linha] = window; // Salva a window na estrutura do game env
+      window = newwin(
+          SQUARE_HEIGHT, SQUARE_WIDTH, coluna * SQUARE_HEIGHT,
+          linha * SQUARE_WIDTH); // cria uma window na posição (coluna, linha)
+      game_environment->gameBoard[coluna * game_environment->height + linha] =
+          window; // Salva a window na estrutura do game env
     }
   }
-  game_environment->gameBoard[game_environment->height*game_environment->width] = newwin(SQUARE_HEIGHT * game_environment->height, SQUARE_WIDTH * 3, 0, game_environment->width * SQUARE_WIDTH);
-  //criamos a tela a direita de UI
+  game_environment
+      ->gameBoard[game_environment->height * game_environment->width] =
+      newwin(SQUARE_HEIGHT * game_environment->height, SQUARE_WIDTH * 3, 0,
+             game_environment->width * SQUARE_WIDTH);
+  // criamos a tela a direita de UI
 }
 
 

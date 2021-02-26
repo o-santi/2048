@@ -19,8 +19,9 @@
 #include <string.h>
 #endif
 
-
+#ifndef GAME_LOGIC_H
 #include "game_logic.h"
+#endif
 
 #define BACKGROUND_COLOR 100
 #define TILE_VAZIA_COLOR 101
@@ -147,6 +148,9 @@ void showEndGameScreen(GAME_ENV *game_environment) {
   werase(ui_window);
   mvwaddstr(ui_window, 6, 1, "Aperte 'q' para fechar o jogo");
   mvwaddstr(ui_window, 7, 1, "ou 'r' para reiniciar o jogo");
+  wattron(ui_window, COLOR_PAIR(BACKGROUND_COLOR));
+  box(ui_window, 0, 0);
+  wattroff(ui_window, COLOR_PAIR(BACKGROUND_COLOR));
   wrefresh(ui_window);
 }
 

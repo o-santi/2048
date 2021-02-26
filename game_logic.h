@@ -4,14 +4,13 @@
    Miguel Uchoa      DRE 120036412
    Caio Monteiro     DRE 120036373
 */
-
-#ifndef GAME_LOGIC_H
-#define GAME_LOGIC_H
-#endif
-
 #ifndef __GAME_ENV_H__
 #include "game_env.h"
 #endif
+
+#ifndef GAME_LOGIC_H
+#define GAME_LOGIC_H
+
 
 
 int getArrayLength(int * array);
@@ -53,3 +52,5 @@ int testIfGameIsWon(GAME_ENV *game_environment);
 void runGameLoop(GAME_ENV * game_environment);
 
 void runGameLoop(GAME_ENV * game_environment);
+
+#endif
