@@ -28,6 +28,7 @@ Implementar o jogo 2048 em C para o terminal com uma interface com cores (utiliz
 ## Funcionamento do jogo
 
 O jogo terá sempre, no máximo, um tabuleiro rodando por vez. Quando o jogo é terminado, não terá nenhum tabuleiro ativo.
+
 As informações do tabuleiro serão guardadas em uma estrutura `GAME_ENV` e as funções e métodos irão operar sobre a estrutura geral (para evitar o uso de variáveis de escopo global)
 
 
@@ -49,6 +50,7 @@ Como utilizamos `ncurses` para a parte visual, assumimos que o usuário utilize 
 
 A movimentação do tabuleiro poderá ser feita com as teclas WASD (maiúscula ou minúscula) bem como com as setas do keypad.
 Para terminar o jogo atual, o usuário pode apertar a letra 'q' (maiúscula ou minúscula) em qualquer momento enquanto o jogo estiver ativo, e então será levado para a tela de "Fim de jogo".
+
 Na tela de "Fim de jogo", o usuário pode apertar a letra 'q' (maiúscula ou minúscula) novamente para finalizar a execução do programa (e o highscore será salvo automaticamente) ou apertar a letra 'r' (maiúscula ou minúscula) para iniciar um novo jogo.
 Suporte para finalizar a execução precocemente (através do input `Ctrl-C`) **não** foi adicionado. Caso o usuário deseje fechar o jogo, deve apertar 'q' duas vezes.
 
@@ -57,7 +59,7 @@ Suporte para finalizar a execução precocemente (através do input `Ctrl-C`) **
 
 ## Compilação
 
-A makefile utilizada 
+A makefile utilizada facilita o processo de compilação. Para compilar, o usuário apenas precisa rodar o comando `make build` após clonar o repositório. Para deletar os arquivos criadas, deve-se usar o comando `make clean`.
 
 
 <a id="orgf5ad89e"></a>
