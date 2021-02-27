@@ -1,74 +1,85 @@
-# 2048
-Trabalho de computação 1 (CC)
 
-## Regras do jogo 2048
+# Table of Contents
 
-O principal objetivo do jogador é mover os blocos com números potências de 2 para formar o número 2048, podendo fazer movimentos para a esquerda, direita, cima e baixo. O jogo começa com dois blocos, cada um com 90% de probabilidade de ser o número 2 e 10% de ser o número 4. 
+1.  [Objetivos](#orgd9c7fad)
+2.  [Premissas](#org193defe)
+    1.  [Funcionamento do jogo](#org2067556)
+    2.  [Especificações do usuário](#org554c980)
+3.  [Regras](#orgb9b511e)
+    1.  [Comandos do jogo](#orgd448981)
+    2.  [Compilação](#orgd6b75f1)
+4.  [Saída](#orgf5ad89e)
+5.  [Ferramentas Utilizadas](#orgd8df0e8)
 
-Quando dois blocos de mesmo número se juntam, formam um novo bloco, que agora tem número igual à soma dos dois blocos anteriores. A cada rodada, um novo bloco é adicionado aleatoriamente no tabuleiro, com as mesmas probabilidades para ser um número 2 ou número 4. 
+<a id="orgd9c7fad"></a>
 
-Se o tabuleiro estiver totalmente populado por blocos e não houver possibilidade de juntar dois blocos, o jogador perde. A pontuação do jogo é calculada somando todos os blocos juntados pelo jogador.
+# Objetivos
 
-## A implementação
-Esse código implementa o jogo "2048" em C usando `ncurses` para uma melhor interface de usuário.
-
-A estrutura `GAME_ENV` guarda diversas variáveis, como o vetor que representa o tabuleiro, a pontuação, a quantidade de rodadas, etc.
-Quando se quiser alterar essas variáveis, apenas passamos o ponteiro correspondente.
-```C
-typedef struct{
-  int actualScore;
-  int highScore;
-  int gameStatus;
-  int rounds;
-  int * gamePositions;
-  WINDOW ** gameBoard;
-} GAME_ENV;
-```
-Na função `main`, apenas temos duas funções:
-```C
-int main(void) {
-  GAME_ENV* game_environment = malloc(sizeof(GAME_ENV));
-  startGameEnvironment(game_environment);
-  runGameLoop(game_environment); 
-  return 0;
-}
-```
-* `startGameEnvironment` inicia a `curses` screen, inicia o jogo, zerando o número de rodadas e pontuação do jogador, cria dois blocos em posições aleatórias e mostra o tabuleiro recém-criado no terminal.
-* `runGameLoop` pega, para cada rodada, o movimento desejado pelo jogador, testa se o movimento muda a posição de pelo menos um bloco no tabuleiro, e se mudar, executamos o movimento. A função que executa o movimento do jogador é a `executarMovimento`:
-  * ```C
-     void executarMovimento(int **matrix, int direcao, GAME_ENV *game_environment) {
-      /* rotaciona o tabuleiro pra direção correta, depois
-          movimenta o tabuleiro pra esquerda e depois rotaciona
-        pra direcao correta novamente
-          TODO: ajeitar esta merda
-       */
-      int index;
-      for (index = 0; index < direcao; index++) {
-        rotacionarMatrix90Graus(matrix);
-      }
-  
-      moverTabuleiroParaEsquerda(matrix, game_environment);
-      for (index = 0; index < 4 - direcao; index++) {
-        rotacionarMatrix90Graus(matrix);
-      }
-      if (matrix == &game_environment->gamePositions) {
-        game_environment->rounds++;
-      }
-    }
-    ```
-    Usamos o seguinte truque: Se o movimento desejado pelo jogador é para a esquerda, movemos normalmente todos os blocos simultaneamente para a esquerda, e se o movimento           desejado pelo jogador é para cima, direita ou baixo, rotacionamos o tabuleiro 90° no sentido  horário 3, 2 ou 1 vez, respectivamente, movimentamos todos os blocos para a         esquerda, e rotacionamos o tabuleiro 1, 2 ou 3 vezes, respectivamente, para retornar o tabuleiro à orientação original. Em todo o movimento realizado pelo jogador, checamos     se o movimento altera a posição de pelo menos um bloco do tabuleiro. Se sim, processamos o movimento. adicionamos um bloco aleatório e o jogo continua. Se não, checamos se o     jogador perdeu ou não (mesmo que o tabuleiro esteja cheio, ainda pode haver a possibilidade de juntar blocos).
+Implementar o jogo 2048 em C para o terminal com uma interface com cores (utilizando ncurses) e com um high score que persiste mesmo após o término da execução do programa.
 
 
- 
+<a id="org193defe"></a>
 
-Fazemos isso porque a implementação das funções que rotacionam o tabuleiro e que movem todos os blocos para a esquerda é relativamente fácil, ao invés de fazer uma função para cada movimento posível do jogo.
-
-Na tela de *GAME OVER* ou na tela de quando o jogador ganha o jogo, pode-se apertar a tecla 'q' para sair do jogo ou 'r' para começar outro jogo. Se estiver no meio de um jogo, pode-se apertar a tecla 'q' para desistir ddo jogo atual e sair, e se quiser começar outro jogo logo em seguida, pode-se apertar a tecla 'r'.
+# Premissas
 
 
+<a id="org2067556"></a>
+
+## Funcionamento do jogo
+
+O jogo terá sempre, no máximo, um tabuleiro rodando por vez. Quando o jogo é terminado, não terá nenhum tabuleiro ativo.
+As informações do tabuleiro serão guardadas em uma estrutura `GAME_ENV` e as funções e métodos irão operar sobre a estrutura geral (para evitar o uso de variáveis de escopo global)
 
 
+<a id="org554c980"></a>
+
+## Especificações do usuário
+
+Como utilizamos `ncurses` para a parte visual, assumimos que o usuário utilize um sistema `unix`, seja ele uma distribuição `linux` que suporte a biblioteca ou `MacOS` (testado em ambos sistemas operacionais). Além disso, assumimos que o usuário possui um terminal que suporte, no mínimo, 256 cores, caso contrário toda a parte do ncurses que utiliza cores não irá funcionar; tal premissa é razoável dado que a maior parte dos terminais modernos possuem suporte para 256 cores. Por fim, para compilar o jogo localmente, assumimos também que o jogador possui a biblioteca `ncurses` instalada.
 
 
+<a id="orgb9b511e"></a>
 
+# Regras
+
+
+<a id="orgd448981"></a>
+
+## Comandos do jogo
+
+A movimentação do tabuleiro poderá ser feita com as teclas WASD (maiúscula ou minúscula) bem como com as setas do keypad.
+Para terminar o jogo atual, o usuário pode apertar a letra 'q' (maiúscula ou minúscula) em qualquer momento enquanto o jogo estiver ativo, e então será levado para a tela de "Fim de jogo".
+Na tela de "Fim de jogo", o usuário pode apertar a letra 'q' (maiúscula ou minúscula) novamente para finalizar a execução do programa (e o highscore será salvo automaticamente) ou apertar a letra 'r' (maiúscula ou minúscula) para iniciar um novo jogo.
+Suporte para finalizar a execução precocemente (através do input `Ctrl-C`) **não** foi adicionado. Caso o usuário deseje fechar o jogo, deve apertar 'q' duas vezes.
+
+
+<a id="orgd6b75f1"></a>
+
+## Compilação
+
+A makefile utilizada 
+
+
+<a id="orgf5ad89e"></a>
+
+# Saída
+
+-   Ao executar o programa, será primeiramente exibido na tela o tabuleiro `4x4` inicial junto da interface de usuário à direita. Cada casa que tiver uma peça ativa será colorida com a cor da peça, e as que estão vazias serão coloridas com a cor padrão do tabuleiro.
+-   Ao movimentar o tabuleiro, caso o movimento mude o estado atual das peças, as informações de `score`, `highscore` e `rounds` serão devidamente atualizadas e o novo tabuleiro será exibido na tela; caso não mude o estado atual, nada será feito.
+-   Ao apertar "q", a tela ficará vermelha, sinalizando ao usuário que o jogo foi terminado. Nesse momento, também será uma saída o arquivo `high_score.txt`, que será criado para armazenar o atual highscore (caso seja maior que o antigo).
+    -   Ao apertar "r" na tela de fim de jogo, o background voltará às cores normais, e a interface de usuário retornará à tela padrão com o score e rounds reiniciados, e o highscore devidamente definido, para indicar que um novo jogo foi criado.
+    -   Ao apertar "q" novamente na tela de fim de jogo, o programa salva o highscore novamente e finaliza a execução
+-   Ao atingir uma casa com 2048, o background ficará verde, indicando ao usuário que o jogo foi ganho; o highscore será salvo e os mesmos comandos da tela de fim de jogo("r" para reiniciar e "q" para sair) serão aceitos.
+
+
+<a id="orgd8df0e8"></a>
+
+# Ferramentas Utilizadas
+
+-   Ponteiros e alocação dinâmica de memória foram constantemente utilizados, bem como o uso de vetores uni e bidimensionais, para armazenar as diversas informações do tabuleiro.
+-   Multiarquivos e compilação com arquivos header.
+-   Entrada e saída de arquivos utilizando as funções `fscanf` e `fprintf` da biblioteca `stdio`.
+-   Estruturas e o acesso de variáveis nelas através de ponteiros.
+-   Escopo de variáveis e funções.
+-   Uso amplo de funções e variáveis.
 
