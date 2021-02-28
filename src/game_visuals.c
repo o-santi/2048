@@ -56,6 +56,7 @@ int getColorPair(int number) {
 void drawBoard(GAME_ENV *game_environment) {
   int index, numberAtTile, charLength, colorPairIndex;
   char *to_char_buffer = malloc(sizeof * to_char_buffer * 50); /* Colocamos 50 characteres só para ter certeza, apesar de não conhecermos ninguém que chegaria em 10 dígitos no 2048. */
+  if (to_char_buffer == NULL) {printf("Memory error!\n"); exit(1);}
   charLength = 0;
   for (index = 0; index < game_environment->height * game_environment->width; index++) {
     werase(game_environment->gameBoard[index]); /* Apagar o bloco que está no índice do tabuleiro. */
@@ -92,11 +93,15 @@ void drawUiScreen(GAME_ENV *game_environment) {
   char *user_actual_score = calloc(sizeof(char) * 10, sizeof(char));
   char *user_high_score = calloc(sizeof(char) * 10, sizeof(char));
   char *round_count = calloc(sizeof(char) * 10, sizeof(char));
-
   char *score_string = calloc(sizeof(char) * 30, sizeof(char));
   char *high_score_string = calloc(sizeof(char) * 30, sizeof(char));
   char *round_string = calloc(sizeof(char) * 30, sizeof(char));
-  
+  if ((round_string == NULL) || (high_score_string == NULL) ||
+      (score_string == NULL) || (round_count == NULL) ||
+      (user_high_score == NULL) || (user_actual_score == NULL)){
+      printf("Memory error!\n"); 
+      exit(1);
+  }
   ui_window = game_environment->gameBoard[game_environment->width * game_environment->height];
   /* Criando um bloco grande para servir como interface de usuário. */
   wbkgd(ui_window, COLOR_PAIR(BACKGROUND_COLOR));
@@ -143,6 +148,8 @@ void showEndGameScreen(GAME_ENV *game_environment) {
   int index, color;
   WINDOW * board_window = malloc(sizeof(void*));
   WINDOW * ui_window = malloc(sizeof(void*));
+  if (board_window == NULL) {printf("Memory error!\n"); exit(1);}
+  if (ui_window == NULL) {printf("Memory error!\n"); exit(1);}
   /* Se o jogador ganha, pintamos o fundo de verde, caso contrário, de vermelho. */
   color = game_environment->gameStatus == 1 ? VICTORY_COLOR : DEFEAT_COLOR; 
   for (index = 0; index < game_environment->width * game_environment->height; index++) {

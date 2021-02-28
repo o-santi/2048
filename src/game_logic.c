@@ -61,6 +61,7 @@
 
 int main(void) {
   GAME_ENV* game_environment = malloc(sizeof(GAME_ENV));
+  if (game_environment == NULL) {printf("Memory error!\n"); exit(1);}
   startGameEnvironment(game_environment);
   runGameLoop(game_environment); 
   return 0;
@@ -187,6 +188,7 @@ void moverTabuleiroParaEsquerda(int ** matriz, GAME_ENV *game_environment) {
   
   int i, j, anterior, coluna, linha, quadrado;
   int *nova_linha = malloc(sizeof(int) * game_environment->width);
+  if (nova_linha == NULL) {printf("Memory error!\n"); exit(1);}
   for (coluna = 0; coluna < game_environment->height; coluna++) {
     memset(nova_linha, 0, sizeof(int) * game_environment->width);
     anterior = 0;
@@ -291,6 +293,7 @@ int createRandomSquare(GAME_ENV * game_environment){
   int qntdQuadradosVazios, randomSquareIndex, randomSquarePosition, index, newTile;
   int * temp_buffer = malloc(sizeof(int) * game_environment->width * game_environment->height);
   float dois_ou_quatro;
+  if (temp_buffer == NULL) {printf("Memory error!\n"); exit(1);}
   qntdQuadradosVazios = 0;
   for (index=0; index < game_environment->height * game_environment->width; index ++){
     if (game_environment->gamePositions[index] == 0){
@@ -318,6 +321,7 @@ int createRandomSquare(GAME_ENV * game_environment){
 int testIfMoveChangedBoard(GAME_ENV *game_environment, int direcao) {
   int index;
   int *temporary_board = calloc(sizeof(int) * game_environment->width * game_environment->height, sizeof(int));
+  if (temporary_board == NULL) {printf("Memory error!\n"); exit(1);}
   memcpy(temporary_board, game_environment->gamePositions, sizeof(int) * game_environment->width * game_environment->height);
   executarMovimento(&temporary_board, direcao, game_environment);
   for (index = 0; index < game_environment->width * game_environment->height; index++) {
@@ -353,7 +357,9 @@ void startGameEnvironment(GAME_ENV *game_environment) {
   game_environment->width = BOARD_WIDTH;
   game_environment->height = BOARD_HEIGHT;
   game_environment->gamePositions = calloc(sizeof(int) * game_environment->height * game_environment->width, sizeof(int));
+  if (game_environment->gamePositions == NULL) {printf("Memory error!\n"); exit(1);}
   game_environment->gameBoard = malloc(sizeof(void*) * (game_environment->height * game_environment->width + 1)); /* Inicializamos o vetor que segurará as windows. */
+  if (game_environment->gameBoard == NULL) {printf("Memory error!\n"); exit(1);}
   game_environment->gameStatus = 0;
   /* gameStatus = 0  -> o jogo está rodando.
      gameStatus = 1  -> o jogo foi ganho.
