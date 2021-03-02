@@ -11,6 +11,7 @@
 4.  [Saída](#orgf5ad89e)
 5.  [Ferramentas Utilizadas](#orgd8df0e8)
 6.  [Mais Detalhes Sobre Algumas Funções](#orgd8df0e9)
+7.  [Diagrama](#orgd8df0e0)
 
 <a id="orgd9c7fad"></a>
 
@@ -119,3 +120,9 @@ Se o input for 'r', a função vai salvar o high score, apagar o tabuleiro atual
 
 ## blitToScreen:
 Essa função é a principal quando se trata do aspecto visual do jogo, pois é responsável por exibir para o usuário, em uma janela do terminal, o estado atual do jogo. Chama `drawBoard` e `drawUIScreen`, que desenham, respectivamente, o tabuleiro e o placar à direita dele, utilizando-se de todas as informações na estrutura `game_environment`. É chamada a cada laço de `runGameLoop`, após todas as manipulações causadas pelo input do usuário, para que sejam exibidas as mudanças no tabuleiro e os novos valores no placar.
+
+<a id="orgd8df0e0"></a>
+
+# Diagrama
+
+![image](2048_fluxo.png)
