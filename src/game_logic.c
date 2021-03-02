@@ -92,7 +92,7 @@ void createBoard(GAME_ENV *game_environment) {
   WINDOW * window; 
   for (column = 0; column < game_environment->height; column++) {
     for (row = 0; row < game_environment->width; row++) {
-      /* cria uma window na posição (column, row). */
+      /* Cria uma window na posição (column, row). */
       window = newwin(
           SQUARE_HEIGHT, SQUARE_WIDTH, column * SQUARE_HEIGHT,
           row * SQUARE_WIDTH); 
@@ -137,7 +137,7 @@ int processUserMove(int userMove) {
   }
 }
 
-/* Função que inverte as columns com as rows de uma matrix.
+/* Função que inverte as colunas com as linhas de uma matriz.
    Aceita o ponteiro do vetor a ser transposto e já modifica-a diretamente.
 */ 
 void transposeMatrix(int **matrix) {
@@ -155,7 +155,7 @@ void transposeMatrix(int **matrix) {
   }
 }
 
-/* Função que, a cada row, troca os valores da primera posição com a última, da segunda posição com a 
+/* Função que, a cada linha, troca os valores da primera posição com a última, da segunda posição com a 
    antepenúltima, e assim por diante, essencialmente trocando os valores da matrix baseando-se num eixo
    vertical imaginário posicionado no meio da matrix.
 */
@@ -163,7 +163,7 @@ void invertMatrix(int **matrix) {
   int column, row, temp;
   for (column = 0; column < BOARD_HEIGHT; column++) {
     for (row = 0; row < BOARD_WIDTH / 2 ; row++) {
-      /* salva o valor de matrix[column][row] */
+      /* Salva o valor de matrix[column][row] */
       temp = (*matrix)[column*BOARD_HEIGHT + row]; 
       (*matrix)[column*BOARD_HEIGHT + row] = (*matrix)[column*BOARD_HEIGHT + BOARD_WIDTH - row - 1];
       (*matrix)[column*BOARD_HEIGHT + BOARD_WIDTH - row - 1] = temp;
@@ -178,11 +178,9 @@ void rotateMatrix90Degrees(int **matrix) {
   invertMatrix(matrix);
 }
 
-/* move todas os blocos com valores para a esquerda. 
+/* Move todas os blocos com valores para a esquerda. 
    ideia para a função foi tirada de:
    https://flothesof.github.io/2048-game.html
-
-   TODO: ajeitar
 */
 void moveBoardtoLeft(int ** matrix, GAME_ENV *game_environment) {
   
@@ -194,28 +192,28 @@ void moveBoardtoLeft(int ** matrix, GAME_ENV *game_environment) {
     previous = 0;
     j = 0;
     for (row = 0; row < game_environment->width; row++) {
-      /* salva o valor de matrix[column][row] */
+      /* Salva o valor de matrix[column][row]. */
       square = (*matrix)[column*game_environment->height + row]; 
       if (square > 0) {
         if (previous == 0) {
-	  previous = square;
+	        previous = square; /* Transfere o quadrado pra esquerda se o quadrado anterior está vazio. */
         }
-	else {
+        else {
           if (previous == square) {
-	    new_row[j] = 2 * square; /* adiciona na nova row 2x o  square */
-            if (matrix == &game_environment->gamePositions) {
+            new_row[j] = 2 * square; /* Junta os dois quadrados se eles forem iguais, multiplicando por 2. */
+            if (matrix == &game_environment->gamePositions) { /* Só adiciona ao score do usuário se a manipulação é feita na matriz do jogo, ao invés de uma temporária de teste. */
               game_environment->actualScore += 2 * square;
               if (game_environment->actualScore > game_environment->highScore) {
                 game_environment->highScore = game_environment->actualScore;
               }
             }
             j++;
-	    previous = 0;
-          }
-	  else {
-	    new_row[j] = previous;
-	    j++;
-	    previous = square;
+            previous = 0;
+          } 
+          else {
+            new_row[j] = previous;
+            j++;
+            previous = square;
           }
         }
       }
@@ -230,7 +228,7 @@ void moveBoardtoLeft(int ** matrix, GAME_ENV *game_environment) {
   free(new_row);
 }
 
-/* Rotaciona o tabuleiro para a orientação correta, depois
+/* Rotaciona o tabuleiro para uma orientação conveniente, depois
    movimenta o tabuleiro para a esquerda e depois rotaciona
    para a orientação original.    
 */
@@ -388,11 +386,11 @@ void manageEndGame(GAME_ENV *game_environment) {
   }
   switch (userChoice) {
   case 'Q':
-  case 'q': /* o usuário escolheu sair do jogo. */
+  case 'q': /* O usuário escolheu sair do jogo. */
     endProgram(game_environment);
     break;
   case 'R':
-  case 'r': /* o usuário escolheu jogar novamente. */
+  case 'r': /* O usuário escolheu jogar novamente. */
     saveHighScore(game_environment);
     free(game_environment->gamePositions);
     free(game_environment->gameBoard);
