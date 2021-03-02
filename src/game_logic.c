@@ -9,8 +9,8 @@
    esses valores se referem a quantidade de rotações necessárias
    para depois também poder mover para a esquerda.
 */
-#define RIGHT 2
 #define UP 3
+#define RIGHT 2
 #define DOWN 1
 #define LEFT 0
 #define EXIT -100
@@ -172,7 +172,7 @@ void invertMatrix(int **matrix) {
 }
 
 /* Ao combinar as funções transposeMatrix e invertMatrix, o efeito produzido é que a matrix foi
-   rotacionada 90 graus para a direita.*/
+   rotacionada 90 graus no sentido anti-horário. */
 void rotateMatrix90Degrees(int **matrix) {
   transposeMatrix(matrix);
   invertMatrix(matrix);

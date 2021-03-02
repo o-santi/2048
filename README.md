@@ -29,7 +29,7 @@ Implementar o jogo 2048 em C para o terminal com uma interface com cores (utiliz
 
 O jogo terá sempre, no máximo, um tabuleiro rodando por vez. Quando o jogo é terminado, não terá nenhum tabuleiro ativo.
 
-As informações do tabuleiro serão guardadas em uma estrutura `GAME_ENV` e as funções e métodos irão operar sobre a estrutura geral (para evitar o uso de variáveis de escopo global)
+As informações do tabuleiro serão guardadas em uma estrutura `GAME_ENV` e as funções e métodos irão operar sobre a estrutura geral (para evitar o uso de variáveis de escopo global).
 
 
 <a id="org554c980"></a>
@@ -59,7 +59,7 @@ Suporte para finalizar a execução precocemente (através do input `Ctrl-C`) **
 
 ## Compilação
 
-A makefile utilizada facilita o processo de compilação. Para compilar, o usuário apenas precisa rodar o comando `make build` após clonar o repositório. Para deletar os arquivos criadas, deve-se usar o comando `make clean`.
+A makefile utilizada facilita o processo de compilação. Para compilar, o usuário apenas precisa rodar o comando `make build` após clonar o repositório. Para deletar os arquivos criados, deve-se usar o comando `make clean`.
 
 
 <a id="orgf5ad89e"></a>
@@ -85,3 +85,34 @@ A makefile utilizada facilita o processo de compilação. Para compilar, o usuá
 -   Escopo de variáveis e funções.
 -   Uso amplo de funções e variáveis.
 
+# Mais Detalhes Sobre Algumas Funções
+
+## startGameEnvironment:
+Inicializa funções do ncurses para editar o visual do jogo futuramente. Também inicializa a forma de input que será usada, definindo por exemplo que a tecla `ENTER` não será necessária pra detectar input, que o input do usuário não será printado, além de habilitar o keypad.
+    
+Inicia a estrutura necessária `game_environment`, do tipo `GAME_ENV`, que armazena todas as informações pertinentes ao jogo: a pontuação `actualScore` atual do jogador, a pontuação `highScore` mais alta que ele já teve, o estado `gameStatus` atual do jogo (se ele está perdido/ganho/acontecendo), a quantidade `rounds` de rodadas, as dimensões `width`x`height` do tabuleiro, o ponteiro para o array `gamePositions`, que guarda cada posição do tabuleiro, e um ponteiro para o array de janelas do ncurses `gameBoard`, que serve para editar visualmente o tabuleiro.
+    
+Essa função é responsável por pegar o high score do arquivo `high_score.txt`, criar as janelas do ncurses, adicionar 2 blocos aleatórios iniciais e exibir tudo na tela, tudo isso por meio de outras funções, as quais chama em ordem.
+
+## runGameLoop:
+Essa é a função mais importante do jogo: ela mantém o jogo rodando, laço por laço, pegando no início de cada laço o input do jogador e chamando sub-funções correspondentes. Por exemplo, se o input é uma direção válida (que movimenta o tabuleiro), ela chama a `executeMove` de acordo, adiciona um novo quadrado ao tabuleiro com `createRandomSquare`, exibe o novo tabuleiro com `blitToScreen` e testa para ver se o jogo foi ganho ou perdido com `testIfGameIsWon`/`testIfGameIsLost`. Se o input for 'q', quebra o loop, encerrando o jogo.
+
+## executeMove/moveBoardtoLeft/rotateMatrix90Degrees:
+Esse trio de funções é responsável por executar todos os movimentos do jogo. Começando pela mais essencial, a `moveBoardtoLeft` é uma função que itera por todos os quadrados no tabuleiro, linha por linha., jogando todos eles pra esquerda até o primeiro obstáculo (e juntando quadrados iguais, se necessário).
+
+Mas essa função por si só não é capaz de realizar todos os movimentos. Por isso, sua auxiliar `rotateMatrix90Degrees` rotaciona a matriz 90º no sentido anti-horário. Com isso, é possível rotacionar o tabuleiro quantas vezes necessário para que um movimento para a esquerda corresponda a um movimento para qualquer outra direção.
+
+Por fim, `executeMove` é a função mais externa do trio: baseada no input do usuário, ela vai executar `rotateMatrix90Degrees` um número 0<=n<4 vezes, de forma que o tabuleiro fique orientado corretamente para a `moveBoardtoLeft` poder fazer seu trabalho. No final, roda novamente o tabuleiro 4-n vezes para que volte para a posição original. O número de vezes que `rotateMatrix90Degrees` é chamada está explicitada pelas constantes no início do código (0/0º para esquerda, 1/90º para baixo, 2/180º para direita, 3/270º para cima).
+
+## testIfGameIsWon/testIfGameIsLost:
+Esse par de funções termina o jogo se o usuário ganhou ou perdeu o jogo. `testIfGameIsLost` testa se o tabuleiro ainda pode ser mudado, testando cada um dos 4 casos possíveis. `testIfGameIsWon` testa se há um quadrado com o valor 2048 no tabuleiro. Essas funções são chamadas todo final de rodada pela `runGameLoop`, alterando o `gameStatus` de acordo com a situação.
+
+## manageEndGame:
+Quando essa função é chamada, o jogo já acabou. A `manageEndGame` vai conferir o input do usuário (que pode ser 'q' para fechar o jogo ou 'r' para reiniciá-lo), e chamar as funções necessárias de acordo com isso.
+    
+Se o input for 'q', `endProgram` é chamada. Essa função vai salvar o high score, desfazer as configurações de input feitas no início do jogo, desativar o ncurses e fechar a janela do jogo.
+
+Se o input for 'r', a função vai salvar o high score, apagar o tabuleiro atual com `free` e chamar novamente `startGameEnvironment` e `runGameLoop`.
+
+## blitToScreen:
+Essa função é a principal quando se trata do aspecto visual do jogo, pois é responsável por exibir para o usuário, em uma janela do terminal, o estado atual do jogo. Chama `drawBoard` e `drawUIScreen`, que desenham, respectivamente, o tabuleiro e o placar à direita dele, utilizando-se de todas as informações na estrutura `game_environment`. É chamada a cada laço de `runGameLoop`, após todas as manipulações causadas pelo input do usuário, para que sejam exibidas as mudanças no tabuleiro e os novos valores no placar.
