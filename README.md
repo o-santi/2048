@@ -10,6 +10,7 @@
     2.  [Compilação](#orgd6b75f1)
 4.  [Saída](#orgf5ad89e)
 5.  [Ferramentas Utilizadas](#orgd8df0e8)
+6.  [Mais Detalhes Sobre Algumas Funções](#orgd8df0e9)
 
 <a id="orgd9c7fad"></a>
 
@@ -84,6 +85,8 @@ A makefile utilizada facilita o processo de compilação. Para compilar, o usuá
 -   Estruturas e o acesso de variáveis nelas através de ponteiros.
 -   Escopo de variáveis e funções.
 -   Uso amplo de funções e variáveis.
+
+<a id="orgd8df0e9"></a>
 
 # Mais Detalhes Sobre Algumas Funções
 
