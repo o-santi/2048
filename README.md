@@ -12,6 +12,7 @@
 5.  [Ferramentas Utilizadas](#orgd8df0e8)
 6.  [Mais Detalhes Sobre Algumas Funções](#orgd8df0e9)
 7.  [Diagrama](#orgd8df0e0)
+8.  [Vídeo de Apresentação](#orgd8df0f0)
 
 <a id="orgd9c7fad"></a>
 
@@ -126,3 +127,9 @@ Essa função é a principal quando se trata do aspecto visual do jogo, pois é 
 # Diagrama
 
 ![image](2048_fluxo.png)
+
+<a id="orgd8df0f0"></a>
+
+# Vídeo de Apresentação
+
+https://www.youtube.com/watch?v=bu978BKESEI&feature=youtu.be
