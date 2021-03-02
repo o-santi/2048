@@ -72,8 +72,8 @@ int getArrayLength(int * array){
 }
 
 /* Função que é chamada quando o jogador quer sair do jogo. */
-void terminarPrograma(GAME_ENV *game_environment) {
-  registrarHighScore(game_environment);
+void endProgram(GAME_ENV *game_environment) {
+  saveHighScore(game_environment);
   nocbreak(); /* Desfaz o cbreak() */
   keypad(stdscr, FALSE); /* Desativa o input por teclado númerico. */
   echo(); /* Ativa o echo do terminal. */
@@ -88,16 +88,16 @@ void terminarPrograma(GAME_ENV *game_environment) {
 */
 void createBoard(GAME_ENV *game_environment) {
   
-  int coluna, linha;
+  int column, row;
   WINDOW * window; 
-  for (coluna = 0; coluna < game_environment->height; coluna++) {
-    for (linha = 0; linha < game_environment->width; linha++) {
-      /* cria uma window na posição (coluna, linha). */
+  for (column = 0; column < game_environment->height; column++) {
+    for (row = 0; row < game_environment->width; row++) {
+      /* cria uma window na posição (column, row). */
       window = newwin(
-          SQUARE_HEIGHT, SQUARE_WIDTH, coluna * SQUARE_HEIGHT,
-          linha * SQUARE_WIDTH); 
+          SQUARE_HEIGHT, SQUARE_WIDTH, column * SQUARE_HEIGHT,
+          row * SQUARE_WIDTH); 
       /* Salva a window na estrutura do game_env */
-      game_environment->gameBoard[coluna * game_environment->height + linha] =
+      game_environment->gameBoard[column * game_environment->height + row] =
           window; 
     }
   }
@@ -137,45 +137,45 @@ int processUserMove(int userMove) {
   }
 }
 
-/* Função que inverte as colunas com as linhas de uma matriz.
+/* Função que inverte as columns com as rows de uma matrix.
    Aceita o ponteiro do vetor a ser transposto e já modifica-a diretamente.
 */ 
-void transporMatriz(int **matriz) {
+void transposeMatrix(int **matrix) {
   
-  int coluna, linha, j;
+  int column, row, j;
   int temp_array[BOARD_WIDTH * BOARD_HEIGHT];
   j = 0;
-  for (coluna = 0; coluna < BOARD_HEIGHT; coluna++) {
-    for (linha = 0; linha < BOARD_WIDTH; linha++) {
-      temp_array[j++] = (*matriz)[linha*BOARD_HEIGHT + coluna];
+  for (column = 0; column < BOARD_HEIGHT; column++) {
+    for (row = 0; row < BOARD_WIDTH; row++) {
+      temp_array[j++] = (*matrix)[row*BOARD_HEIGHT + column];
     }
   }
   for (j = 0; j < BOARD_WIDTH * BOARD_HEIGHT; j++) {
-    (*matriz)[j] = temp_array[j];
+    (*matrix)[j] = temp_array[j];
   }
 }
 
-/* Função que, a cada linha, troca os valores da primera posição com a última, da segunda posição com a 
-   antepenúltima, e assim por diante, essencialmente trocando os valores da matriz baseando-se num eixo
-   vertical imaginário posicionado no meio da matriz.
+/* Função que, a cada row, troca os valores da primera posição com a última, da segunda posição com a 
+   antepenúltima, e assim por diante, essencialmente trocando os valores da matrix baseando-se num eixo
+   vertical imaginário posicionado no meio da matrix.
 */
-void inverterMatriz(int **matriz) {
-  int coluna, linha, temp;
-  for (coluna = 0; coluna < BOARD_HEIGHT; coluna++) {
-    for (linha = 0; linha < BOARD_WIDTH / 2 ; linha++) {
-      /* salva o valor de matriz[coluna][linha] */
-      temp = (*matriz)[coluna*BOARD_HEIGHT + linha]; 
-      (*matriz)[coluna*BOARD_HEIGHT + linha] = (*matriz)[coluna*BOARD_HEIGHT + BOARD_WIDTH - linha - 1];
-      (*matriz)[coluna*BOARD_HEIGHT + BOARD_WIDTH - linha - 1] = temp;
+void invertMatrix(int **matrix) {
+  int column, row, temp;
+  for (column = 0; column < BOARD_HEIGHT; column++) {
+    for (row = 0; row < BOARD_WIDTH / 2 ; row++) {
+      /* salva o valor de matrix[column][row] */
+      temp = (*matrix)[column*BOARD_HEIGHT + row]; 
+      (*matrix)[column*BOARD_HEIGHT + row] = (*matrix)[column*BOARD_HEIGHT + BOARD_WIDTH - row - 1];
+      (*matrix)[column*BOARD_HEIGHT + BOARD_WIDTH - row - 1] = temp;
     }
   }
 }
 
-/* Ao combinar as funções transporMatriz e inverterMatriz, o efeito produzido é que a matriz foi
+/* Ao combinar as funções transposeMatrix e invertMatrix, o efeito produzido é que a matrix foi
    rotacionada 90 graus para a direita.*/
-void rotacionarMatrix90Graus(int **matriz) {
-  transporMatriz(matriz);
-  inverterMatriz(matriz);
+void rotateMatrix90Degrees(int **matrix) {
+  transposeMatrix(matrix);
+  invertMatrix(matrix);
 }
 
 /* move todas os blocos com valores para a esquerda. 
@@ -184,68 +184,68 @@ void rotacionarMatrix90Graus(int **matriz) {
 
    TODO: ajeitar
 */
-void moverTabuleiroParaEsquerda(int ** matriz, GAME_ENV *game_environment) {
+void moveBoardtoLeft(int ** matrix, GAME_ENV *game_environment) {
   
-  int i, j, anterior, coluna, linha, quadrado;
-  int *nova_linha = malloc(sizeof(int) * game_environment->width);
-  if (nova_linha == NULL) {printf("Memory error!\n"); exit(1);}
-  for (coluna = 0; coluna < game_environment->height; coluna++) {
-    memset(nova_linha, 0, sizeof(int) * game_environment->width);
-    anterior = 0;
+  int i, j, previous, column, row, square;
+  int *new_row = malloc(sizeof(int) * game_environment->width);
+  if (new_row == NULL) {printf("Memory error!\n"); exit(1);}
+  for (column = 0; column < game_environment->height; column++) {
+    memset(new_row, 0, sizeof(int) * game_environment->width);
+    previous = 0;
     j = 0;
-    for (linha = 0; linha < game_environment->width; linha++) {
-      /* salva o valor de matriz[coluna][linha] */
-      quadrado = (*matriz)[coluna*game_environment->height + linha]; 
-      if (quadrado > 0) {
-        if (anterior == 0) {
-	  anterior = quadrado;
+    for (row = 0; row < game_environment->width; row++) {
+      /* salva o valor de matrix[column][row] */
+      square = (*matrix)[column*game_environment->height + row]; 
+      if (square > 0) {
+        if (previous == 0) {
+	  previous = square;
         }
 	else {
-          if (anterior == quadrado) {
-	    nova_linha[j] = 2 * quadrado; /* adiciona na nova linha 2x o  quadrado */
-            if (matriz == &game_environment->gamePositions) {
-              game_environment->actualScore += 2 * quadrado;
+          if (previous == square) {
+	    new_row[j] = 2 * square; /* adiciona na nova row 2x o  square */
+            if (matrix == &game_environment->gamePositions) {
+              game_environment->actualScore += 2 * square;
               if (game_environment->actualScore > game_environment->highScore) {
                 game_environment->highScore = game_environment->actualScore;
               }
             }
             j++;
-	    anterior = 0;
+	    previous = 0;
           }
 	  else {
-	    nova_linha[j] = anterior;
+	    new_row[j] = previous;
 	    j++;
-	    anterior = quadrado;
+	    previous = square;
           }
         }
       }
     }
-    if (anterior > 0) {
-      nova_linha[j] = anterior;
+    if (previous > 0) {
+      new_row[j] = previous;
     }
     for (i = 0; i < game_environment->width; i++) {
-      (*matriz)[coluna*game_environment->height + i] = nova_linha[i];
+      (*matrix)[column*game_environment->height + i] = new_row[i];
     }
   }
-  free(nova_linha);
+  free(new_row);
 }
 
 /* Rotaciona o tabuleiro para a orientação correta, depois
    movimenta o tabuleiro para a esquerda e depois rotaciona
    para a orientação original.    
 */
-void executarMovimento(int **matriz, int direcao, GAME_ENV *game_environment) {
+void executeMove(int **matrix, int direction, GAME_ENV *game_environment) {
   
   int index;
-  for (index = 0; index < direcao; index++) {
-    rotacionarMatrix90Graus(matriz);
+  for (index = 0; index < direction; index++) {
+    rotateMatrix90Degrees(matrix);
   }
   
-  moverTabuleiroParaEsquerda(matriz, game_environment);
-  for (index = 0; index < 4 - direcao; index++) {
-    rotacionarMatrix90Graus(matriz);
+  moveBoardtoLeft(matrix, game_environment);
+  for (index = 0; index < 4 - direction; index++) {
+    rotateMatrix90Degrees(matrix);
   }
-  if (matriz == &game_environment->gamePositions) {
+  if (matrix == &game_environment->gamePositions) {
     game_environment->rounds++;
   }
 }
@@ -253,15 +253,15 @@ void executarMovimento(int **matriz, int direcao, GAME_ENV *game_environment) {
 /* Função que vai registrar o high score do jogador num arquivo,
    para que fique registrado e com fácil acesso. 
 */
-void registrarHighScore(GAME_ENV *game_environment){
+void saveHighScore(GAME_ENV *game_environment){
   FILE *fhs; /* Arquivo que guarda o high score. */
   char stringHighScore[11]; /* O último high score em string. O tamanho máximo de uma int é 10. */
-  int ultimoHighScore;
-  /* Podemos assumir que fhs existe pois a função pegaHighScore é chamada antes e esta já cria a pasta, caso não exista. */
+  int lastHighScore;
+  /* Podemos assumir que fhs existe pois a função fetchHighScore é chamada antes e esta já cria a pasta, caso não exista. */
   fhs = fopen("high_score.txt", "r");
     fscanf(fhs, "%s", stringHighScore);
-    ultimoHighScore = atoi(stringHighScore); /* Converte o high score de string para int. */
-    if (game_environment->highScore > ultimoHighScore){
+    lastHighScore = atoi(stringHighScore); /* Converte o high score de string para int. */
+    if (game_environment->highScore > lastHighScore){
       freopen("high_score.txt", "w", fhs); /* Reabre o arquivo, deletando seu conteúdo, já qque o jogador fez sua maior pontuação até agora. */
       fprintf(fhs, "%d", game_environment->highScore);
     }
@@ -272,7 +272,7 @@ void registrarHighScore(GAME_ENV *game_environment){
    e salva ele no game_env para que possa ser visualizado pelo jogador
    a todo momento quando joga.  
 */
-void pegaHighScore(GAME_ENV *game_environment){
+void fetchHighScore(GAME_ENV *game_environment){
   FILE *fhs;
   char stringHighScore[11];
   fhs = fopen("high_score.txt", "r");
@@ -290,23 +290,23 @@ void pegaHighScore(GAME_ENV *game_environment){
    e o coloca aleatoriamente em um bloco vazio qualquer do tabuleiro.
 */
 int createRandomSquare(GAME_ENV * game_environment){
-  int qntdQuadradosVazios, randomSquareIndex, randomSquarePosition, index, newTile;
+  float two_or_for;
+  int emptySquareAmount, randomSquareIndex, randomSquarePosition, index, newTile;
   int * temp_buffer = malloc(sizeof(int) * game_environment->width * game_environment->height);
-  float dois_ou_quatro;
   if (temp_buffer == NULL) {printf("Memory error!\n"); exit(1);}
-  qntdQuadradosVazios = 0;
+  emptySquareAmount = 0;
   for (index=0; index < game_environment->height * game_environment->width; index ++){
     if (game_environment->gamePositions[index] == 0){
-      temp_buffer[qntdQuadradosVazios] = index;
-      qntdQuadradosVazios++;
+      temp_buffer[emptySquareAmount] = index;
+      emptySquareAmount++;
     }  
 }
-  if (qntdQuadradosVazios == 0){
+  if (emptySquareAmount == 0){
     return -1;
   }
-  randomSquareIndex = (int) rand() / (RAND_MAX + 1.0) * qntdQuadradosVazios; /* Escolhemos um numero de [0, qntdquadradosvazios-1] */
-  dois_ou_quatro = rand() / (RAND_MAX + 1.0);
-  newTile = dois_ou_quatro > 0.9 ? 4 : 2; /* 90% de chance de ser 2 e 10% de ser 4 (probabilidades advindas da internet) */
+  randomSquareIndex = (int) rand() / (RAND_MAX + 1.0) * emptySquareAmount; /* Escolhemos um numero de [0, emptySquareAmount-1] */
+  two_or_for = rand() / (RAND_MAX + 1.0);
+  newTile = two_or_for > 0.9 ? 4 : 2; /* 90% de chance de ser 2 e 10% de ser 4 (probabilidades advindas da internet) */
   randomSquarePosition = temp_buffer[randomSquareIndex]; /* Pegamos uma posição aleatória de um bloco do tabuleiro que esteja vazio. */
   game_environment->gamePositions[randomSquarePosition] = newTile; /* criamos um novo valor com as probablidades supracitadas nessa posição */
   free(temp_buffer);
@@ -318,12 +318,12 @@ int createRandomSquare(GAME_ENV * game_environment){
    e comparando se esse tabuleiro temporário ainda é igual ao tabuleiro
    original.
 */
-int testIfMoveChangedBoard(GAME_ENV *game_environment, int direcao) {
+int testIfMoveChangedBoard(GAME_ENV *game_environment, int direction) {
   int index;
   int *temporary_board = calloc(sizeof(int) * game_environment->width * game_environment->height, sizeof(int));
   if (temporary_board == NULL) {printf("Memory error!\n"); exit(1);}
   memcpy(temporary_board, game_environment->gamePositions, sizeof(int) * game_environment->width * game_environment->height);
-  executarMovimento(&temporary_board, direcao, game_environment);
+  executeMove(&temporary_board, direction, game_environment);
   for (index = 0; index < game_environment->width * game_environment->height; index++) {
     if (game_environment->gamePositions[index] != temporary_board[index]) {
       free(temporary_board);
@@ -367,7 +367,7 @@ void startGameEnvironment(GAME_ENV *game_environment) {
   */
   game_environment->actualScore = 0; /* pontuação inicia com 0. */
   game_environment->rounds = 0;
-  pegaHighScore(game_environment);
+  fetchHighScore(game_environment);
   createBoard(game_environment); /* cria todos as windows e as salva no vetor gameBoard. */
   createRandomSquare(game_environment);
   createRandomSquare(game_environment); /* chamamos 2 vezes para criar 2 blocos iniciais aleatórios. */
@@ -377,7 +377,7 @@ void startGameEnvironment(GAME_ENV *game_environment) {
 /* Função que é chamada quando o jogador aperta 'q' no meio de um jogo. A tela de fim de jogo será mostrada e
    se o jogador apertar 'q' novamente, encerra-se o programa, e se apertar 'r', outro jogo é iniciado.
 */
-void manageFimDeJogo(GAME_ENV *game_environment) {
+void manageEndGame(GAME_ENV *game_environment) {
   int userChoice;
   showEndGameScreen(game_environment);
   while(1) {
@@ -389,11 +389,11 @@ void manageFimDeJogo(GAME_ENV *game_environment) {
   switch (userChoice) {
   case 'Q':
   case 'q': /* o usuário escolheu sair do jogo. */
-    terminarPrograma(game_environment);
+    endProgram(game_environment);
     break;
   case 'R':
   case 'r': /* o usuário escolheu jogar novamente. */
-    registrarHighScore(game_environment);
+    saveHighScore(game_environment);
     free(game_environment->gamePositions);
     free(game_environment->gameBoard);
     startGameEnvironment(game_environment);
@@ -406,10 +406,10 @@ void manageFimDeJogo(GAME_ENV *game_environment) {
    mudado.
 */
 int testIfGameIsLost(GAME_ENV *game_environment) {
-  int direcao, changed;
-  for (direcao = 0; direcao < 4; direcao++) {
+  int direction, changed;
+  for (direction = 0; direction < 4; direction++) {
     /* Testamos as quatro possíveis direções para jogar. */
-    changed = testIfMoveChangedBoard(game_environment, direcao);
+    changed = testIfMoveChangedBoard(game_environment, direction);
     if (changed == 1) {
       return 0; /* O jogo deve continuar, pois ainda há movimentos possíveis. */
     }
@@ -433,17 +433,17 @@ int testIfGameIsWon(GAME_ENV *game_environment) {
 
 /* Inicia o laço o jogo, que continua até que o jogador perca, ganhe ou pare o jogo com 'q'. */
 void runGameLoop(GAME_ENV * game_environment) {
-  int direcao, userMove, movimentoMudouTabuleiro;
+  int direction, userMove, didBoardChange;
   do {
     userMove = getch();
-    direcao = processUserMove(userMove); /* Retorna -1 se a direção não for válida. */
-    if (direcao == EXIT) {
+    direction = processUserMove(userMove); /* Retorna -1 se a direção não for válida. */
+    if (direction == EXIT) {
       break;
     }
-    if (direcao != -1) {
-      movimentoMudouTabuleiro = testIfMoveChangedBoard(game_environment, direcao);
-      if (movimentoMudouTabuleiro == 1) {
-        executarMovimento(&game_environment->gamePositions, direcao, game_environment);                
+    if (direction != -1) {
+      didBoardChange = testIfMoveChangedBoard(game_environment, direction);
+      if (didBoardChange == 1) {
+        executeMove(&game_environment->gamePositions, direction, game_environment);                
         createRandomSquare(game_environment);
         blitToScreen(game_environment);
         game_environment->gameStatus = testIfGameIsLost(game_environment);
@@ -451,7 +451,7 @@ void runGameLoop(GAME_ENV * game_environment) {
       }
     }
   } while (game_environment->gameStatus == 0);
-  manageFimDeJogo(game_environment);
+  manageEndGame(game_environment);
 }
 
 

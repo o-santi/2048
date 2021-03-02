@@ -28,7 +28,7 @@
 
 /* Define as cores para a tela ncurses. */
 #define BACKGROUND_COLOR 100
-#define TILE_VAZIA_COLOR 101
+#define EMPTY_TILE_COLOR 101
 #define DEFEAT_COLOR 102
 #define VICTORY_COLOR 103
 
@@ -39,17 +39,17 @@
 #define BOARD_HEIGHT 4
 
 
-/* Função que acha a potencia de 2 do número, que será o color-id dele.
+/* Função que acha a power de 2 do número, que será o color-id dele.
    Como todos os números são múltiplos de 2, só precisamos dividir até achar 1.
 */
 int getColorPair(int number) {
-  int potencia = 0;
-  if (number == 0) return TILE_VAZIA_COLOR;
+  int power = 0;
+  if (number == 0) return EMPTY_TILE_COLOR;
   while (number > 1) {
     number /= 2;
-    potencia++;
+    power++;
   }
-  return potencia;
+  return power;
 }
 
 /* Função que desenha todo o tabuleiro, blocos do tabuleiro e tela de pontuação usando ncurses. */
@@ -196,7 +196,7 @@ void initColorPairs(void) { /* Ordem: (id, texto, fundo). */
   init_pair(10, 15, 221); /* Cores do 1024. */
   init_pair(11, 15, 220); /* Cores do 2048. */
   init_pair(BACKGROUND_COLOR, 0, 102); 
-  init_pair(TILE_VAZIA_COLOR, 0, 102);
+  init_pair(EMPTY_TILE_COLOR, 0, 102);
   init_pair(DEFEAT_COLOR, 0, COLOR_RED);
   init_pair(VICTORY_COLOR, 0, COLOR_GREEN);
 }
